@@ -1,0 +1,13 @@
+spring:
+  r2dbc:
+    #    url: r2dbcs:mysql://139.9.160.14:3306/test
+    #    username: Flux
+    #    password: root
+    password: root123!
+    url: r2dbcs:mysql://puleya.mysql.polardb.rds.aliyuncs.com:3306/webflux
+    username: root123
+
+
+
+server:
+  port: 80
