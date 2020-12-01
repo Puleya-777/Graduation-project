@@ -11,7 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="core" target="14" />
+      <module name="core" target="15" />
       <module name="privilegeService" target="14" />
       <module name="project" target="14" />
     </bytecodeTargetLevel>
