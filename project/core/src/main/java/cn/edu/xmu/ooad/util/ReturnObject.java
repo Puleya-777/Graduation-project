@@ -1,5 +1,6 @@
 package cn.edu.xmu.ooad.util;
 
+import lombok.Builder;
 import lombok.Getter;
 
 /**

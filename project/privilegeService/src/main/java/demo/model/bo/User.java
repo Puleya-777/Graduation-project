@@ -184,7 +184,7 @@ public class User implements VoObject {
         String emlEnc = vo.getEmail() == null ? null : AES.encrypt(vo.getEmail(), User.AESPASS);
         Byte state = (byte) this.state.code;
 
-        UserPo po = new UserPo();
+        UserPo po = UserPo.builder().build();
         po.setId(id);
         po.setName(nameEnc);
         po.setAvatar(vo.getAvatar());
