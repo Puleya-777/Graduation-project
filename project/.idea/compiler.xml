@@ -7,11 +7,19 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="privilegeService" />
+        <module name="core" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="privilegeService" target="15" />
-      <module name="project" target="15" />
+      <module name="core" target="14" />
+      <module name="privilegeService" target="14" />
+      <module name="project" target="14" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="core" options="-parameters" />
+      <module name="privilegeService" options="-parameters" />
+    </option>
   </component>
 </project>
