@@ -1,9 +1,9 @@
 package demo.Controller;
 
+import cn.edu.xmu.ooad.annotation.Audit;
 import demo.Repository.UserRepository;
 import demo.model.po.UserPo;
 import io.swagger.annotations.*;
-import cn.edu.xmu.ooad.annotation.Audit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
