@@ -17,8 +17,8 @@ import lombok.Data;
 @Data
 public class RolePrivilege implements VoObject {
     private Long id= null;
-    private RolePo role = new RolePo();
-    private PrivilegePo privilege = new PrivilegePo();
+    private RolePo role = RolePo.builder().build();
+    private PrivilegePo privilege = PrivilegePo.builder().build();
     private UserPo creator = UserPo.builder().build();
     private String gmtModified = null;
     @Override

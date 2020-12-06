@@ -1,15 +1,21 @@
 package demo.Controller;
 
 import cn.edu.xmu.ooad.annotation.Depart;
+import cn.edu.xmu.ooad.annotation.LoginUser;
+import cn.edu.xmu.ooad.model.VoObject;
+import cn.edu.xmu.ooad.util.Common;
 import cn.edu.xmu.ooad.util.ResponseCode;
 import cn.edu.xmu.ooad.util.ReturnObject;
 import demo.Service.NewUserService;
+import demo.Service.RoleService;
 import io.swagger.annotations.*;
 import cn.edu.xmu.ooad.annotation.Audit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+import springfox.documentation.annotations.ApiIgnore;
 
 /**
  * @author chei1
@@ -20,6 +26,9 @@ public class PrivilegeController {
 
     @Autowired
     NewUserService newUserService;
+
+    @Autowired
+    RoleService roleService;
 
     /***
      * 取消用户权限
@@ -45,11 +54,30 @@ public class PrivilegeController {
     }
 
     /**
+     * 增加角色权限
+     */
+    @ApiOperation(value = "新增角色权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="roleid", required = true, dataType="String", paramType="path"),
+            @ApiImplicitParam(name="privilegeid", required = true, dataType="String", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @PostMapping(value = "roles/{roleid}/privileges/{privilegeid}",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
+    public Object addRolePriv(@PathVariable Long roleid, @PathVariable Long privilegeid, @LoginUser @ApiIgnore @RequestParam(required = false, defaultValue = "0") Long userId){
+        ReturnObject<VoObject> returnObject = roleService.addRolePriv(roleid, privilegeid, userId);
+        if (returnObject.getCode() == ResponseCode.OK) {
+            return Common.getRetObject(returnObject);
+        } else {
+            return Common.decorateReturnObject(returnObject);
+        }
+    }
+
+    /**
      * auth014: 管理员审核用户
-     * @param id: 用户 id
-     * @param bindingResult 校验信息
-     * @return Object
-     * @author 24320182203227 LiZihan
      */
     @ApiOperation(value = "管理员审核用户")
     @ApiImplicitParams({
@@ -65,7 +93,7 @@ public class PrivilegeController {
             @ApiResponse(code = 705, message = "无权限访问")
     })
     @Audit // 需要认证
-    @PutMapping("shops/{did}/adminusers/{id}/approve")
+    @PutMapping(value = "shops/{did}/adminusers/{id}/approve",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
     public Mono<ReturnObject> approveUser(@PathVariable Long id, @PathVariable Long did/**, @RequestBody Boolean approve, @Depart Long shopid, BindingResult **/) {
 
         boolean approve=false;

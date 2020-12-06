@@ -86,7 +86,7 @@ public class Role implements VoObject, Serializable {
      * modifiedBy 王纬策 2020/11/7 19:20
      */
     public RolePo createUpdatePo(RoleVo vo){
-        RolePo po = new RolePo();
+        RolePo po = RolePo.builder().build();
         po.setId(this.getId());
         po.setName(vo.getName());
         po.setCreatorId(null);
@@ -106,7 +106,7 @@ public class Role implements VoObject, Serializable {
      * modifiedBy 王纬策 2020/11/7 19:20
      */
     public RolePo gotRolePo() {
-        RolePo po = new RolePo();
+        RolePo po = RolePo.builder().build();
         po.setId(this.getId());
         po.setName(this.getName());
         po.setCreatorId(this.getCreatorId());

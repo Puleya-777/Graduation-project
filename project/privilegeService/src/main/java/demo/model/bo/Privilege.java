@@ -131,7 +131,7 @@ public class Privilege implements VoObject {
      * @return po对象
      */
     public PrivilegePo createUpdatePo(PrivilegeVo vo){
-        PrivilegePo po = new PrivilegePo();
+        PrivilegePo po = PrivilegePo.builder().build();
         po.setId(this.getId());
         po.setName(vo.getName());
         po.setUrl(vo.getUrl());
