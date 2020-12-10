@@ -1,10 +1,11 @@
 package demo.model.bo;
 
-import cn.edu.xmu.ooad.model.VoObject;
-import cn.edu.xmu.ooad.util.Common;
-import cn.edu.xmu.ooad.util.encript.SHA256;
+import com.example.model.VoObject;
+import com.example.util.Common;
+import com.example.util.encript.SHA256;
 import demo.model.po.UserRolePo;
 import demo.model.vo.UserRoleRetVo;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;

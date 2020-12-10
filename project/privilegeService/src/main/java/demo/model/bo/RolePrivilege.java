@@ -1,6 +1,6 @@
 package demo.model.bo;
 
-import cn.edu.xmu.ooad.model.VoObject;
+import com.example.model.VoObject;
 
 import demo.model.po.PrivilegePo;
 import demo.model.po.RolePo;

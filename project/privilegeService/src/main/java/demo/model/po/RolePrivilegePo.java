@@ -1,7 +1,10 @@
 package demo.model.po;
 
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.LocalDateTime;
 
+@Table("auth_role_privilege")
 public class RolePrivilegePo {
     /**
      *

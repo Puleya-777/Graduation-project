@@ -6,7 +6,7 @@ import demo.model.vo.RoleRetVo;
 import demo.model.vo.RoleSimpleRetVo;
 import demo.model.vo.RoleVo;
 import lombok.Data;
-import cn.edu.xmu.ooad.model.VoObject;
+import com.example.model.VoObject;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

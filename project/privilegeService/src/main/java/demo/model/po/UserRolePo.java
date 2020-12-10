@@ -1,7 +1,17 @@
 package demo.model.po;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.LocalDateTime;
 
+@Table("auth_user_role")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserRolePo {
     /**
      *
@@ -10,6 +20,7 @@ public class UserRolePo {
      *
      * @mbg.generated
      */
+    @Id
     private Long id;
 
     /**

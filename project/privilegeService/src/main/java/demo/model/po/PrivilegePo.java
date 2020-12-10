@@ -1,7 +1,18 @@
 package demo.model.po;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.LocalDateTime;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Table("auth_privilege")
 public class PrivilegePo {
     /**
      *

@@ -5,9 +5,9 @@ import demo.model.vo.PrivilegeRetVo;
 import demo.model.vo.PrivilegeSimpleRetVo;
 import demo.model.vo.PrivilegeVo;
 import lombok.Data;
-import cn.edu.xmu.ooad.model.VoObject;
-import cn.edu.xmu.ooad.util.Common;
-import cn.edu.xmu.ooad.util.encript.SHA256;
+import com.example.model.VoObject;
+import com.example.util.Common;
+import com.example.util.encript.SHA256;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

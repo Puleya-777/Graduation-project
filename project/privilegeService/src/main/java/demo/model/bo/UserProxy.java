@@ -1,7 +1,7 @@
 package demo.model.bo;
 
-import cn.edu.xmu.ooad.util.Common;
-import cn.edu.xmu.ooad.util.encript.SHA256;
+import com.example.util.Common;
+import com.example.util.encript.SHA256;
 import demo.model.po.UserProxyPo;
 import demo.model.vo.UserProxyVo;
 import lombok.Data;

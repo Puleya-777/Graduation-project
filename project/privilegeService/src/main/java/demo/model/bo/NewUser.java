@@ -1,7 +1,7 @@
 package demo.model.bo;
 
-import cn.edu.xmu.ooad.model.VoObject;
-import cn.edu.xmu.ooad.util.encript.AES;
+import com.example.model.VoObject;
+import com.example.util.encript.AES;
 import demo.model.vo.NewUserVo;
 import lombok.Data;
 

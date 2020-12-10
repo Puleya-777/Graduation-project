@@ -5,10 +5,10 @@ import demo.model.vo.UserRetVo;
 import demo.model.vo.UserSimpleRetVo;
 import demo.model.vo.UserVo;
 import lombok.Data;
-import cn.edu.xmu.ooad.model.VoObject;
-import cn.edu.xmu.ooad.util.Common;
-import cn.edu.xmu.ooad.util.encript.AES;
-import cn.edu.xmu.ooad.util.encript.SHA256;
+import com.example.model.VoObject;
+import com.example.util.Common;
+import com.example.util.encript.AES;
+import com.example.util.encript.SHA256;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
