@@ -126,4 +126,8 @@ public class UserService {
                     return new ReturnObject<>(returnObject);
                 });
     }
+
+    public Mono<ReturnObject<PageInfo<VoObject>>> findAllPrivs(Integer page, Integer pageSize) {
+        return privilegeDao.findAllPrivs(page, pageSize);
+    }
 }

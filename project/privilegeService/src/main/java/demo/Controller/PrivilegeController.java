@@ -182,7 +182,6 @@ public class PrivilegeController {
     }
 
     /**
-     * TODO
      * 5
      * 获得所有权限
      *
@@ -197,8 +196,12 @@ public class PrivilegeController {
     })
     @Audit
     @GetMapping("privileges")
-    public Object getAllPrivs(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
-        return privilegeRepository.findAll();
+    public Mono<Object> getAllPrivs(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
+
+        page = (page == null)?1:page;
+        pageSize = (pageSize == null)?10:pageSize;
+
+        return userService.findAllPrivs(page, pageSize).map(Common::getPageRetObject);
 
     }
 
