@@ -1,21 +1,14 @@
 package demo.dao;
 
-import com.example.model.VoObject;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import demo.Repository.PrivilegeRepository;
 import demo.model.bo.Privilege;
 import demo.model.po.PrivilegePo;
 import demo.model.vo.PrivilegeVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class PrivilegeDao {
@@ -40,23 +33,6 @@ public class PrivilegeDao {
                     }
                 });
             }
-        });
-    }
-
-    public Mono<ReturnObject<PageInfo<VoObject>>> findAllPrivs(Integer page, Integer pageSize) {
-        PageHelper.startPage(page, pageSize);
-        Flux<PrivilegePo> privilegePoFlux=privilegeRepository.findAll();
-        Mono<List<VoObject>> ret=privilegePoFlux.map(Privilege::new).filter(privilege->privilege.authetic()).collect(Collectors.toList());
-        Mono<List<PrivilegePo>> privilegePos=privilegePoFlux.collect(Collectors.toList());
-
-        return Mono.zip(privilegePos,ret).map(tuple->{
-            PageInfo<PrivilegePo> privPoPage = PageInfo.of(tuple.getT1());
-            PageInfo<VoObject> privPage = new PageInfo<>(tuple.getT2());
-            privPage.setPages(privPoPage.getPages());
-            privPage.setPageNum(privPoPage.getPageNum());
-            privPage.setPageSize(privPoPage.getPageSize());
-            privPage.setTotal(privPoPage.getTotal());
-            return new ReturnObject<>(privPage);
         });
     }
 }

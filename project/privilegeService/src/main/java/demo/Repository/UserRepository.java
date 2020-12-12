@@ -1,5 +1,6 @@
 package demo.Repository;
 
+import demo.model.bo.User;
 import demo.model.po.UserPo;
 import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
@@ -13,4 +14,10 @@ public interface UserRepository extends ReactiveCrudRepository<UserPo,Long> {
     Flux<UserPo> findAllByUserNameAndMobile(String userName,String mobile);
 
     Flux<UserPo> findAllByDepartId(Long departId);
+
+    Mono<UserPo> findByMobile(String mobile);
+
+    Mono<UserPo> findByEmail(String email);
+
+    Mono<UserPo> findByUserName(String username);
 }

@@ -2,6 +2,7 @@ package demo.service;
 
 import com.example.model.VoObject;
 import com.example.util.Common;
+import com.example.util.RandomCaptcha;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import com.example.util.encript.AES;
@@ -13,16 +14,24 @@ import demo.dao.PrivilegeDao;
 import demo.dao.UserDao;
 import demo.model.bo.User;
 import demo.model.po.UserPo;
+import demo.model.vo.ModifyPwdVo;
 import demo.model.vo.PrivilegeVo;
+import demo.model.vo.ResetPwdVo;
+import demo.model.vo.UserVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +48,12 @@ public class UserService {
     UserRepository userRepository;
     @Autowired
     UserRoleRepository userRoleRepository;
+
+    @Autowired
+    RedisTemplate redisTemplate;
+//    @Autowired
+//    private RedisTemplate<String, Serializable> redisTemplate;
+
 
 
     /**
@@ -127,7 +142,149 @@ public class UserService {
                 });
     }
 
-    public Mono<ReturnObject<PageInfo<VoObject>>> findAllPrivs(Integer page, Integer pageSize) {
-        return privilegeDao.findAllPrivs(page, pageSize);
+
+    /**
+     * huiyu
+     */
+
+    @Transactional
+    public Mono<ReturnObject> modifyUserInfo(Long id, UserVo userVo) {
+        // 查询密码等资料以计算新签名
+        return userRepository.findById(id).map(it->{
+           if(it == null || (it.getState() != null
+                   && User.State.getTypeByCode(it.getState().intValue()) == User.State.DELETE)){
+               logger.info("用户不存在或已被删除：id = " + id);
+               return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
+           }else{
+               // 构造 User 对象以计算签名
+               User user = new User(it);
+               UserPo po = user.createUpdatePo(userVo);
+               // 将更改的联系方式 (如发生变化) 的已验证字段改为 false
+               if (userVo.getEmail() != null && !userVo.getEmail().equals(user.getEmail())) {
+                   po.setEmailVerified((byte) 0);
+               }
+               if (userVo.getMobile() != null && !userVo.getMobile().equals(user.getMobile())) {
+                   po.setMobileVerified((byte) 0);
+               }
+               // 更新数据库
+               ReturnObject<Object> retObj;
+               Mono<UserPo> ret;
+               try {
+                   ret=userRepository.save(po);
+               } catch (DataAccessException e) {
+                   // 如果发生 Exception，判断是邮箱还是啥重复错误
+                   if (Objects.requireNonNull(e.getMessage()).contains("auth_user.auth_user_mobile_uindex")) {
+                       logger.info("电话重复：" + userVo.getMobile());
+                       retObj = new ReturnObject<>(ResponseCode.MOBILE_REGISTERED);
+                   } else if (e.getMessage().contains("auth_user.auth_user_email_uindex")) {
+                       logger.info("邮箱重复：" + userVo.getEmail());
+                       retObj = new ReturnObject<>(ResponseCode.EMAIL_REGISTERED);
+                   } else {
+                       // 其他情况属未知错误
+                       logger.error("数据库错误：" + e.getMessage());
+                       retObj = new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR,
+                               String.format("发生了严重的数据库错误：%s", e.getMessage()));
+                   }
+                   return retObj;
+               } catch (Exception e) {
+                   // 其他 Exception 即属未知错误
+                   logger.error("严重错误：" + e.getMessage());
+                   return new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR,
+                           String.format("发生了严重的未知错误：%s", e.getMessage()));
+               }
+               // 检查更新有否成功
+               if (ret.block()!=null) {
+                   logger.info("用户不存在或已被删除：id = " + id);
+                   retObj = new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
+               } else {
+                   logger.info("用户 id = " + id + " 的资料已更新");
+                   retObj = new ReturnObject<>();
+               }
+               return retObj;
+           }
+        });
+
+    }
+
+    @Transactional
+    public Mono<ReturnObject> resetPassword(ResetPwdVo vo, String ip) {
+        return Mono.just(redisTemplate.hasKey("ip_"+ip)).map(flag->{
+            if(flag){
+                return new ReturnObject<>(ResponseCode.AUTH_USER_FORBIDDEN);
+            }else{
+                redisTemplate.opsForValue().set("ip_"+ip,ip);
+                redisTemplate.expire("ip_" + ip, 60*1000, TimeUnit.MILLISECONDS);
+                //验证邮箱、手机号
+                UserPo userPo1 = null;
+                try {
+                    userRepository.findByMobile(AES.encrypt(vo.getMobile(),User.AESPASS)).block();
+                }catch (Exception e) {
+                    return new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR,e.getMessage());
+                }
+                if(userPo1==null) {
+                    return new ReturnObject<>(ResponseCode.MOBILE_WRONG);
+                } else if(!userPo1.getEmail().equals(AES.encrypt(vo.getEmail(), User.AESPASS))) {
+                    return new ReturnObject<>(ResponseCode.EMAIL_WRONG);
+                }
+
+
+                //随机生成验证码
+                String captcha = RandomCaptcha.getRandomString(6);
+                while(redisTemplate.hasKey(captcha)) {
+                    captcha = RandomCaptcha.getRandomString(6);
+                }
+                return new ReturnObject<>(ResponseCode.OK);
+            }
+        });
+
+
+
+
+
+
+//        //发送邮件(请在配置文件application.properties填写密钥)
+//        SimpleMailMessage msg = new SimpleMailMessage();
+//        msg.setSubject("【oomall】密码重置通知");
+//        msg.setSentDate(new Date());
+//        msg.setText("您的验证码是：" + captcha + "，5分钟内有效。");
+//        msg.setFrom("925882085@qq.com");
+//        msg.setTo(vo.getEmail());
+//        try {
+//            mailSender.send(msg);
+//        } catch (MailException e) {
+//            return new ReturnObject<>(ResponseCode.FIELD_NOTVALID);
+//        }
+
+    }
+
+    @Transactional
+    public Mono<ReturnObject>modifyPassword(ModifyPwdVo modifyPwdVo) {
+        return Mono.just(redisTemplate.hasKey("cp_" + modifyPwdVo.getCaptcha())).map(flag -> {
+            if (!flag) {
+                return new ReturnObject<>(ResponseCode.AUTH_INVALID_ACCOUNT);
+            } else {
+                String id=redisTemplate.opsForValue().get("cp_" + modifyPwdVo.getCaptcha()).toString();
+                    UserPo userpo;
+                    try {
+                        userpo = userRepository.findById(Long.parseLong(id)).block();
+                    } catch (Exception e) {
+                        return new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, e.getMessage());
+                    }
+                    //新密码与原密码相同
+                    if (AES.decrypt(userpo.getPassword(), User.AESPASS).equals(modifyPwdVo.getNewPassword())) {
+                        return new ReturnObject<>(ResponseCode.PASSWORD_SAME);
+                    }
+                    //加密
+                    userpo.setPassword(AES.encrypt(modifyPwdVo.getNewPassword(), User.AESPASS));
+                    //更新数据库
+                    try {
+                        userRepository.save(userpo);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, e.getMessage());
+                    }
+                    return new ReturnObject<>(ResponseCode.OK);
+                }
+        });
     }
 }

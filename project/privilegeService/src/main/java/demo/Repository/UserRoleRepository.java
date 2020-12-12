@@ -14,4 +14,6 @@ public interface UserRoleRepository extends ReactiveCrudRepository<UserRolePo,Lo
     Mono<UserRolePo> findByUserIdAndRoleId(Long userId,Long roleId);
 
     Flux<UserRolePo> findAllByUserId(Long userId);
+
+    Flux<UserRolePo> findByRoleId(Long roleId);
 }
