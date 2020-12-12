@@ -728,4 +728,38 @@ public class PrivilegeController {
 
     }
 
+    /**
+     * auth014: 管理员审核用户
+     * @param id: 用户 id
+     * @param bindingResult 校验信息
+     * @return Object
+     */
+    @ApiOperation(value = "管理员审核用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="Integer", paramType="path"),
+            @ApiImplicitParam(name="did", required = true, dataType="Integer", paramType="path"),
+            @ApiImplicitParam(name="approve", required = true, dataType="Boolean", paramType="body")
+
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = 503, message = "字段不合法"),
+            @ApiResponse(code = 705, message = "无权限访问")
+    })
+    @Audit // 需要认证
+    @PutMapping("shops/{did}/adminusers/{id}/approve")
+    public Mono approveUser(@PathVariable Long id,@PathVariable Long did, BindingResult bindingResult,@RequestBody Boolean approve,@Depart Long shopid) {
+        logger.debug("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve);
+        if(did==0|| did.equals(shopid))
+        {
+            return newUserService.approveUser(approve,id);
+        }
+        else
+        {
+            logger.error("approveUser: 无权限查看此部门的用户 did=" + did);
+            return Mono.just(new ReturnObject<>(ResponseCode.FIELD_NOTVALID));
+        }
+    }
+
 }
