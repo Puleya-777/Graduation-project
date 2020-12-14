@@ -206,41 +206,41 @@ public class PrivilegeController {
      * 以下这个url运行有问题，先注释掉；
      */
 
-//    /**
-//     * 6
-//     * 修改权限
-//     *
-//     * @param id : 权限id
-//     * @return Object
-//     */
-//    @ApiOperation(value = "修改权限信息")
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header"),
-//            @ApiImplicitParam(name = "id", required = true, dataType = "String", paramType = "path")
-//    })
-//    @ApiResponses({
-//            @ApiResponse(code = 0, message = "成功"),
-//    })
-//    @Audit
-//    @PutMapping("privileges/{id}")
-//    public Mono<Object> changePriv(@PathVariable Long id, @Validated @RequestBody PrivilegeVo vo, BindingResult bindingResult, @LoginUser Long userId, @Depart Long departId,
-//                             HttpServletResponse httpServletResponse) {
-//        logger.debug("changePriv: id = " + id + " vo" + vo);
-//        logger.debug("getAllPrivs: userId = " + userId + " departId = " + departId);
-//        /* 处理参数校验错误 */
-//        Object o = Common.processFieldErrors(bindingResult, httpServletResponse);
-//        if (o != null) {
-//            return Mono.just(o);
-//        }
-//
-//        return userService.changePriv(id, vo).map(returnObject -> {
-//            if (returnObject.getCode() == ResponseCode.OK) {
-//                return Common.getRetObject(returnObject);
-//            } else {
-//                return Common.decorateReturnObject(returnObject);
-//            }
-//        });
-//    }
+    /**
+     * 6
+     * 修改权限
+     *
+     * @param id : 权限id
+     * @return Object
+     */
+    @ApiOperation(value = "修改权限信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "id", required = true, dataType = "String", paramType = "path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @PutMapping("privileges/{id}")
+    public Mono<Object> changePriv(@PathVariable Long id, @Validated @RequestBody PrivilegeVo vo, BindingResult bindingResult, @LoginUser Long userId, @Depart Long departId,
+                             HttpServletResponse httpServletResponse) {
+        logger.debug("changePriv: id = " + id + " vo" + vo);
+        logger.debug("getAllPrivs: userId = " + userId + " departId = " + departId);
+        /* 处理参数校验错误 */
+        Object o = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if (o != null) {
+            return Mono.just(o);
+        }
+
+        return userService.changePriv(id, vo).map(returnObject -> {
+            if (returnObject.getCode() == ResponseCode.OK) {
+                return Common.getRetObject(returnObject);
+            } else {
+                return Common.decorateReturnObject(returnObject);
+            }
+        });
+    }
 
     /**
      * 7
