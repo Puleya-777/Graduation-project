@@ -1,7 +1,11 @@
 package demo.model.po;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
+
 import java.time.LocalDateTime;
 
+@Table("auth_new_user")
 public class NewUserPo {
     /**
      *
@@ -10,6 +14,7 @@ public class NewUserPo {
      *
      * @mbg.generated
      */
+    @Id
     private Long id;
 
     /**

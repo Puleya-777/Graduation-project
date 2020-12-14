@@ -6,20 +6,15 @@ import com.example.annotation.LoginUser;
 import com.example.model.VoObject;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
+import com.example.util.ResponseUtil;
 import com.example.util.ReturnObject;
-import com.example.util.encript.AES;
-import com.github.pagehelper.PageInfo;
 import demo.Repository.*;
 import demo.model.bo.Role;
 import demo.model.bo.User;
-import demo.model.bo.UserRole;
-import demo.model.po.PrivilegePo;
-import demo.model.po.RolePo;
-import demo.model.po.UserPo;
-import demo.model.po.UserRolePo;
-import demo.model.vo.PrivilegeVo;
-import demo.model.vo.RoleVo;
+import demo.model.vo.*;
+import demo.service.NewUserService;
 import demo.service.RoleService;
+import demo.service.UserProxyService;
 import demo.service.UserService;
 import io.swagger.annotations.*;
 import org.slf4j.Logger;
@@ -33,13 +28,14 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import springfox.documentation.annotations.ApiIgnore;
+import demo.util.IpUtil;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author chei1
@@ -56,6 +52,29 @@ public class PrivilegeController {
     RoleService roleService;
 
     @Resource
+    @Autowired
+    UserProxyService userProxyService;
+    @Autowired
+    NewUserService newUserService;
+    private final UserRepository userRepository;
+
+    private final UserRoleRepository userRoleRepository;
+
+    private final RoleRepository roleRepository;
+
+    private final PrivilegeRepository privilegeRepository;
+
+    private final RolePrivilegeRepository rolePrivilegeRepository;
+
+    public PrivilegeController(UserRepository userRepository, UserRoleRepository userRoleRepository, RoleRepository roleRepository, PrivilegeRepository privilegeRepository, RolePrivilegeRepository rolePrivilegeRepository) {
+        this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.roleRepository = roleRepository;
+        this.privilegeRepository = privilegeRepository;
+        this.rolePrivilegeRepository = rolePrivilegeRepository;
+    }
+
+    @Autowired
     private HttpServletResponse httpServletResponse;
 
     /***1
@@ -128,15 +147,11 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
 
     })
-//    @Audit
+    @Audit
     @GetMapping(value = "/adminusers/self/roles/{id}")
     public @ResponseBody
     Mono<Object> getUserSelfRole(@PathVariable Long id) {
-        Mono<ReturnObject<List>> mono=userService.getSelfUserRoles(id);
-//        System.out.println(mono.block().getData());
-        Mono<Object> ret=mono.map(Common::getListRetObject);
-//        System.out.println(ret.block());
-        return ret;
+        return userService.getSelfUserRoles(id).map(Common::getListRetObject);
     }
 
 
@@ -246,7 +261,7 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
             @ApiResponse(code = 504, message = "操作id不存在")
     })
-//    @Audit // 需要认证
+    @Audit // 需要认证
     @GetMapping("/shops/{did}/adminusers/{id}/privileges")
     public Mono<Object> getPrivsByUserId(@PathVariable Long did, @PathVariable Long id) {
 
@@ -290,7 +305,7 @@ public class PrivilegeController {
      *
      * @date Created in 2020/11/8 0:33
      **/
-//    @Audit
+    @Audit
     @ApiOperation(value = "auth003: 查看任意用户信息", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "用户token", required = true),
@@ -322,7 +337,7 @@ public class PrivilegeController {
      *
      * @date Created in 2020/11/8 0:33
      **/
-//    @Audit
+    @Audit
     @ApiOperation(value = "auth003: 查询用户信息", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "用户token", required = true),
@@ -441,9 +456,314 @@ public class PrivilegeController {
 
 
         @GetMapping("/test")
-    public Mono<Object> test(){
+    public Mono<Long> test(){
+        return Flux.just("nn1","nn2").map(it->{
+            if(it.equals("nn1")){
+                return null;
+            }else{
+                return it;
+            }
+        }).count();
+    }
 
-        return null;
+
+    /**
+     * huiyu
+     */
+
+    /**
+     * 解除用户代理关系
+     */
+    @ApiOperation(value = "解除用户代理关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "id", required = true, dataType = "Long", paramType = "path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @DeleteMapping("proxie/{id}")
+    public Mono removeUserProxy(@PathVariable Long id, @LoginUser @ApiIgnore Long userId) {
+        logger.debug("removeUserProxy: id = " + id);
+        return userProxyService.removeUserProxy(id, userId);
+    }
+
+    /**
+     * 查询所有用户代理关系
+     */
+    @ApiOperation(value = "查询所有用户代理关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @GetMapping("shops/{did}/proxies")
+    public Object listProxies(Long aId, Long bId,@PathVariable Long did) {
+        logger.debug("listProxies: aId = " + aId + " bId = " + bId);
+        return userProxyService.listProxies(aId, bId,did);
+    }
+
+    /**
+     * 禁止代理关系
+     * @param id 代理关系id
+     * @param did 部门id
+     * @return
+     */
+    @ApiOperation(value = "禁止代理关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "id", required = true, dataType = "Long", paramType = "path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @DeleteMapping("shops/{did}/allproxie/{id}")
+    public Mono removeAllProxies(@PathVariable Long id,@PathVariable Long did) {
+        logger.debug("removeAllProxies: id) = " + id);
+        return userProxyService.removeAllProxies(id,did);
+    }
+
+    /**
+     * 注册用户
+     * @param vo NewUserVo
+     * @param result 参数校验
+     * @return
+     */
+    @ApiOperation(value="注册用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "body", dataType = "NewUserVo", name = "vo", value = "newUserInfo", required = true)
+    })
+    @ApiResponses({
+            @ApiResponse(code = 732, message = "邮箱已被注册"),
+            @ApiResponse(code = 733, message = "电话已被注册"),
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = 404, message = "参数不合法")
+    })
+    @PostMapping("adminusers")
+    public Mono register(@Validated @RequestBody NewUserVo vo, BindingResult result){
+        if(result.hasErrors()){
+            return Mono.just(Common.processFieldErrors(result,httpServletResponse));
+        }
+        ReturnObject returnObject=newUserService.register(vo);
+        if(returnObject.getCode()==ResponseCode.OK){
+            return Mono.just(ResponseUtil.ok(returnObject.getData()));
+        }
+        else {
+            return Mono.just(ResponseUtil.fail(returnObject.getCode()));
+        }
+    }
+    /**
+     * 查询所有状态
+     * @return Object
+     */
+    @ApiOperation(value="获得管理员用户的所有状态")
+    @ApiResponses({
+            @ApiResponse(code = 0,message = "成功")
+    })
+    @GetMapping("adminusers/states")
+    public Object getAllStates(){
+        User.State[] states=User.State.class.getEnumConstants();
+        List<StateVo> stateVos=new ArrayList<StateVo>();
+        for(int i=0;i<states.length;i++){
+            stateVos.add(new StateVo(states[i]));
+        }
+        return ResponseUtil.ok(new ReturnObject<List>(stateVos).getData());
+    }
+
+    /**
+     * auth004: 修改自己的信息
+     * @param vo 修改信息 UserVo 视图
+     * @param bindingResult 校验信息
+     * @return Object
+     */
+    @ApiOperation(value = "修改自己的信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "Token", required = true),
+            @ApiImplicitParam(paramType = "body", dataType = "RoleVo", name = "vo", value = "可修改的用户信息", required = true)
+
+    })
+    @ApiResponses({
+            @ApiResponse(code = 732, message = "邮箱已被注册"),
+            @ApiResponse(code = 733, message = "电话已被注册"),
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @PutMapping("adminusers")
+    public Mono changeMyAdminselfInfo(@LoginUser Long id, @Validated @RequestBody UserVo vo, BindingResult bindingResult) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("modifyUserInfo: id = "+ id +" vo = " + vo);
+        }
+        return Mono.just(Common.processFieldErrors(bindingResult, httpServletResponse)).map(it->{
+            if(it!=null){
+                logger.info("incorrect data received while modifyUserInfo id = " + id);
+                return it;
+            }else{
+                //return Common.decorateReturnObject();
+                return userService.modifyUserInfo(id, vo).map(Common::decorateReturnObject);
+            }
+        });
+    }
+
+    /**
+     * auth002: 用户重置密码
+     * @param vo 重置密码对象
+     * @param httpServletResponse HttpResponse
+     * @param httpServletRequest HttpRequest
+     * @param bindingResult 校验信息
+     * @return Object
+     */
+    @ApiOperation(value="用户重置密码")
+    @ApiResponses({
+            @ApiResponse(code = 745, message = "与系统预留的邮箱不一致"),
+            @ApiResponse(code = 746, message = "与系统预留的电话不一致"),
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @PutMapping("adminusers/password/reset")
+    @ResponseBody
+    public Mono resetPassword(@RequestBody ResetPwdVo vo, BindingResult bindingResult
+            , HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest) {
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("resetPassword");
+        }
+        /* 处理参数校验错误 */
+        return Mono.just(Common.processFieldErrors(bindingResult, httpServletResponse)).map(o->{
+            if(o!=null){
+                return o;
+            }else{
+                String ip = IpUtil.getIpAddr(httpServletRequest);
+                return userService.resetPassword(vo,ip).map(it->{
+                    return Common.decorateReturnObject(it);
+                });
+            }
+        });
+    }
+
+    /**
+     * auth002: 用户修改密码
+     * @param vo 修改密码对象
+     * @return Object
+     */
+    @ApiOperation(value="用户修改密码",produces = "application/json")
+    @ApiResponses({
+            @ApiResponse(code = 700, message = "用户名不存在或者密码错误"),
+            @ApiResponse(code = 741, message = "不能与旧密码相同"),
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @PutMapping("/adminusers/password")
+    @ResponseBody
+    public Mono modifyPassword(@RequestBody ModifyPwdVo vo) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("modifyPassword");
+        }
+        return userService.modifyPassword(vo).map(it-> Common.decorateReturnObject(it));
+    }
+
+    /**
+     * 获得角色所有权限
+
+     */
+    @ApiOperation(value = "获得角色所有权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="String", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @GetMapping("roles/{id}/privileges")
+    public Mono getRolePrivs(@PathVariable Long id){
+        return roleService.findRolePrivs(id).map(ret->{
+            if (ret.getCode() == ResponseCode.OK) {
+                return Common.getListRetObject(ret);
+            } else {
+                return Common.decorateReturnObject(ret);
+            }
+        });
+    }
+
+    /**
+     * 取消角色权限
+     */
+    @ApiOperation(value = "取消角色权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="String", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @DeleteMapping("roleprivileges/{id}")
+    public Mono delRolePriv(@PathVariable Long id){
+        logger.debug("delRolePriv: id = "+ id);
+        return roleService.delRolePriv(id).map(ret -> ResponseUtil.fail(ret.getCode(), ret.getErrmsg()));
+
+    }
+
+    /**
+     * 增加角色权限
+     */
+    @ApiOperation(value = "新增角色权限")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="roleid", required = true, dataType="String", paramType="path"),
+            @ApiImplicitParam(name="privilegeid", required = true, dataType="String", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @Audit
+    @PostMapping("roles/{roleid}/privileges/{privilegeid}")
+    public Mono addRolePriv(@PathVariable Long roleid, @PathVariable Long privilegeid, @LoginUser @ApiIgnore @RequestParam(required = false, defaultValue = "0") Long userId){
+        logger.debug("addRolePriv: id = "+ roleid+" userid: id = "+ userId);
+       return roleService.addRolePriv(roleid, privilegeid, userId).map(returnObject -> {
+           if (returnObject.getCode() == ResponseCode.OK) {
+               return Common.getRetObject(returnObject);
+           } else {
+               return Common.decorateReturnObject(returnObject);
+           }
+       });
+
+    }
+
+    /**
+     * auth014: 管理员审核用户
+     * @param id: 用户 id
+     * @param bindingResult 校验信息
+     * @return Object
+     */
+    @ApiOperation(value = "管理员审核用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="Integer", paramType="path"),
+            @ApiImplicitParam(name="did", required = true, dataType="Integer", paramType="path"),
+            @ApiImplicitParam(name="approve", required = true, dataType="Boolean", paramType="body")
+
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = 503, message = "字段不合法"),
+            @ApiResponse(code = 705, message = "无权限访问")
+    })
+    @Audit // 需要认证
+    @PutMapping("shops/{did}/adminusers/{id}/approve")
+    public Mono approveUser(@PathVariable Long id,@PathVariable Long did, BindingResult bindingResult,@RequestBody Boolean approve,@Depart Long shopid) {
+        logger.debug("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve);
+        if(did==0|| did.equals(shopid))
+        {
+            return newUserService.approveUser(approve,id);
+        }
+        else
+        {
+            logger.error("approveUser: 无权限查看此部门的用户 did=" + did);
+            return Mono.just(new ReturnObject<>(ResponseCode.FIELD_NOTVALID));
+        }
     }
 
 }
