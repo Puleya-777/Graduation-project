@@ -34,8 +34,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import springfox.documentation.annotations.ApiIgnore;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,25 +55,7 @@ public class PrivilegeController {
     @Autowired
     RoleService roleService;
 
-    private final UserRepository userRepository;
-
-    private final UserRoleRepository userRoleRepository;
-
-    private final RoleRepository roleRepository;
-
-    private final PrivilegeRepository privilegeRepository;
-
-    private final RolePrivilegeRepository rolePrivilegeRepository;
-
-    public PrivilegeController(UserRepository userRepository, UserRoleRepository userRoleRepository, RoleRepository roleRepository, PrivilegeRepository privilegeRepository, RolePrivilegeRepository rolePrivilegeRepository) {
-        this.userRepository = userRepository;
-        this.userRoleRepository = userRoleRepository;
-        this.roleRepository = roleRepository;
-        this.privilegeRepository = privilegeRepository;
-        this.rolePrivilegeRepository = rolePrivilegeRepository;
-    }
-
-    @Autowired
+    @Resource
     private HttpServletResponse httpServletResponse;
 
     /***1
@@ -144,11 +128,15 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
 
     })
-    @Audit
+//    @Audit
     @GetMapping(value = "/adminusers/self/roles/{id}")
     public @ResponseBody
     Mono<Object> getUserSelfRole(@PathVariable Long id) {
-        return userService.getSelfUserRoles(id).map(Common::getListRetObject);
+        Mono<ReturnObject<List>> mono=userService.getSelfUserRoles(id);
+//        System.out.println(mono.block().getData());
+        Mono<Object> ret=mono.map(Common::getListRetObject);
+//        System.out.println(ret.block());
+        return ret;
     }
 
 
@@ -258,9 +246,9 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
             @ApiResponse(code = 504, message = "操作id不存在")
     })
-    @Audit // 需要认证
+//    @Audit // 需要认证
     @GetMapping("/shops/{did}/adminusers/{id}/privileges")
-    public Mono<Object> getPrivsByUserId(@PathVariable Long id, @PathVariable Long did) {
+    public Mono<Object> getPrivsByUserId(@PathVariable Long did, @PathVariable Long id) {
 
         return userService.findPrivsByUserId(id,did).map(returnObject->{
             if (returnObject.getCode() == ResponseCode.OK) {
@@ -302,7 +290,7 @@ public class PrivilegeController {
      *
      * @date Created in 2020/11/8 0:33
      **/
-    @Audit
+//    @Audit
     @ApiOperation(value = "auth003: 查看任意用户信息", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "用户token", required = true),
@@ -310,7 +298,7 @@ public class PrivilegeController {
     })
     @ApiResponses({
     })
-    @GetMapping("adminusers/{id}")
+    @GetMapping("/shops/{did}/adminusers/{id}")
     public Mono<Object> getUserById(@PathVariable("id") Long id) {
 
         return userService.findUserById(id).map(returnObject->{
@@ -334,7 +322,7 @@ public class PrivilegeController {
      *
      * @date Created in 2020/11/8 0:33
      **/
-    @Audit
+//    @Audit
     @ApiOperation(value = "auth003: 查询用户信息", produces = "application/json")
     @ApiImplicitParams({
             @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "用户token", required = true),
@@ -345,7 +333,7 @@ public class PrivilegeController {
     })
     @ApiResponses({
     })
-    @GetMapping("adminusers/all")
+    @GetMapping(value = "/shops/{did}/adminusers/all")
     public Mono<Object> findAllUser(
             @RequestParam String userName,
             @RequestParam String mobile,
@@ -453,14 +441,9 @@ public class PrivilegeController {
 
 
         @GetMapping("/test")
-    public Mono<Long> test(){
-        return Flux.just("nn1","nn2").map(it->{
-            if(it.equals("nn1")){
-                return null;
-            }else{
-                return it;
-            }
-        }).count();
+    public Mono<Object> test(){
+
+        return null;
     }
 
 }

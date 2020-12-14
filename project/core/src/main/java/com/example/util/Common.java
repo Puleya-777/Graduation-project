@@ -104,12 +104,17 @@ public class Common {
      */
     public static Object getListRetObject(ReturnObject<List> returnObject) {
         ResponseCode code = returnObject.getCode();
+        System.out.println(returnObject.getData());
+        System.out.println(code);
+
         switch (code){
             case OK:
                 List objs = returnObject.getData();
                 if (objs != null){
                     List<Object> ret = new ArrayList<>(objs.size());
                     for (Object data : objs) {
+                        System.out.println(data);
+                        System.out.println(data instanceof VoObject);
                         if (data instanceof VoObject) {
                             ret.add(((VoObject)data).createVo());
                         }
