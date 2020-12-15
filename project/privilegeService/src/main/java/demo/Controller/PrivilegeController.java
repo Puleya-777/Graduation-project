@@ -30,7 +30,6 @@ import reactor.core.publisher.Mono;
 import springfox.documentation.annotations.ApiIgnore;
 import demo.util.IpUtil;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
@@ -50,8 +49,6 @@ public class PrivilegeController {
     UserService userService;
     @Autowired
     RoleService roleService;
-
-    @Resource
     @Autowired
     UserProxyService userProxyService;
     @Autowired
@@ -185,6 +182,7 @@ public class PrivilegeController {
     }
 
     /**
+     * TODO
      * 5
      * 获得所有权限
      *
@@ -199,14 +197,14 @@ public class PrivilegeController {
     })
     @Audit
     @GetMapping("privileges")
-    public Mono<Object> getAllPrivs(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
-
-        page = (page == null)?1:page;
-        pageSize = (pageSize == null)?10:pageSize;
-
-        return userService.findAllPrivs(page, pageSize).map(Common::getPageRetObject);
+    public Object getAllPrivs(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
+        return privilegeRepository.findAll();
 
     }
+
+    /**
+     * 以下这个url运行有问题，先注释掉；
+     */
 
     /**
      * 6
@@ -263,7 +261,7 @@ public class PrivilegeController {
     })
     @Audit // 需要认证
     @GetMapping("/shops/{did}/adminusers/{id}/privileges")
-    public Mono<Object> getPrivsByUserId(@PathVariable Long did, @PathVariable Long id) {
+    public Mono<Object> getPrivsByUserId(@PathVariable Long id, @PathVariable Long did) {
 
         return userService.findPrivsByUserId(id,did).map(returnObject->{
             if (returnObject.getCode() == ResponseCode.OK) {
@@ -313,7 +311,7 @@ public class PrivilegeController {
     })
     @ApiResponses({
     })
-    @GetMapping("/shops/{did}/adminusers/{id}")
+    @GetMapping("adminusers/{id}")
     public Mono<Object> getUserById(@PathVariable("id") Long id) {
 
         return userService.findUserById(id).map(returnObject->{
@@ -348,7 +346,7 @@ public class PrivilegeController {
     })
     @ApiResponses({
     })
-    @GetMapping(value = "/shops/{did}/adminusers/all")
+    @GetMapping("adminusers/all")
     public Mono<Object> findAllUser(
             @RequestParam String userName,
             @RequestParam String mobile,
@@ -452,8 +450,6 @@ public class PrivilegeController {
             }
         });
     }
-
-
 
         @GetMapping("/test")
     public Mono<Long> test(){
@@ -703,7 +699,7 @@ public class PrivilegeController {
     public Mono delRolePriv(@PathVariable Long id){
         logger.debug("delRolePriv: id = "+ id);
         return roleService.delRolePriv(id).map(ret -> ResponseUtil.fail(ret.getCode(), ret.getErrmsg()));
-
+        
     }
 
     /**
@@ -764,6 +760,14 @@ public class PrivilegeController {
             logger.error("approveUser: 无权限查看此部门的用户 did=" + did);
             return Mono.just(new ReturnObject<>(ResponseCode.FIELD_NOTVALID));
         }
+    }
+
+    /**
+     * 获取新用户列表
+     */
+    @GetMapping("shops/{did}/adminusers/allnew")
+    public Flux getNewUser(@PathVariable Long did){
+        return newUserService.getAllNewUser(did);
     }
 
 }

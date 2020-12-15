@@ -18,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.util.encript.AES;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
@@ -275,5 +276,9 @@ public class NewUserService {
                 return  Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了严重的数据库错误：%s", e.getMessage())));
             }
         });
+    }
+
+    public Flux getAllNewUser(Long did){
+        return newUserRepository.findAllByDepartId(did==null?0L:did);
     }
 }

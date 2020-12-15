@@ -25,6 +25,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
@@ -116,7 +117,6 @@ public class UserService {
         return userDao.findUserById(userId).map(userPo -> {
             if(userPo != null) {
                 logger.debug("findUserById : " + userPo);
-
                 return new ReturnObject<>(new User(userPo));
             } else {
                 logger.debug("findUserById: Not Found");
@@ -129,12 +129,10 @@ public class UserService {
     public Mono<ReturnObject<PageInfo<VoObject>>> findAllUsers(String userName, String mobile, Integer page, Integer pagesize) {
         String userNameAES = userName.isBlank() ? "" : AES.encrypt(userName, User.AESPASS);
         String mobileAES = mobile.isBlank() ? "" : AES.encrypt(mobile, User.AESPASS);
-
         PageHelper.startPage(page, pagesize);
-        Mono<PageInfo<UserPo>> userPos = userDao.findAllUsers(userName, mobileAES, page, pagesize);
+        Mono<PageInfo<UserPo>> userPos = userDao.findAllUsers(userNameAES, mobileAES, page, pagesize);
         Mono<List<VoObject>> users=userPos.map(pageInfo->pageInfo.getList().stream().map(User::new)
                 .filter(User::authetic).collect(Collectors.toList()));
-        System.out.println(users.block());
         return Mono.zip(userPos,users).map(tuple-> {
                     PageInfo<VoObject> returnObject = new PageInfo<>(tuple.getT2());
                     returnObject.setPages(tuple.getT1().getPages());
@@ -145,9 +143,6 @@ public class UserService {
                 });
     }
 
-    public Mono<ReturnObject<PageInfo<VoObject>>> findAllPrivs(Integer page, Integer pageSize) {
-        return privilegeDao.findAllPrivs(page, pageSize);
-    }
 
     /**
      * huiyu
@@ -293,4 +288,5 @@ public class UserService {
                 }
         });
     }
+
 }
