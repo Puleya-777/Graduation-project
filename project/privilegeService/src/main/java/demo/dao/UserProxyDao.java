@@ -25,10 +25,13 @@ public class UserProxyDao {
 
 
     public Mono removeUserProxy(Long id, Long aid) {
+        System.out.println("id:"+id+"aid"+aid);
         return userProxyRepository.findById(id).map(it->{
             if(aid.compareTo(it.getUserAId())==0){
                 try {
-                    userProxyRepository.deleteById(id);
+                    System.out.println(it);
+                    Mono<Integer> ret=userProxyRepository.deleteUserProxyPoById(id);
+                    System.out.println("删除成功");
                     return Mono.just(new ReturnObject());
                 }catch (DataAccessException e) {
                     // 数据库错误

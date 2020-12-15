@@ -198,7 +198,11 @@ public class PrivilegeController {
     @Audit
     @GetMapping("privileges")
     public Object getAllPrivs(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize) {
-        return privilegeRepository.findAll();
+        page = (page == null)?1:page;
+        pageSize = (pageSize == null)?10:pageSize;
+
+        return userService.findAllPrivs(page, pageSize).map(Common::getPageRetObject);
+
 
     }
 
@@ -261,7 +265,7 @@ public class PrivilegeController {
     })
     @Audit // 需要认证
     @GetMapping("/shops/{did}/adminusers/{id}/privileges")
-    public Mono<Object> getPrivsByUserId(@PathVariable Long id, @PathVariable Long did) {
+    public Mono<Object> getPrivsByUserId(@PathVariable Long did, @PathVariable Long id) {
 
         return userService.findPrivsByUserId(id,did).map(returnObject->{
             if (returnObject.getCode() == ResponseCode.OK) {
@@ -311,7 +315,7 @@ public class PrivilegeController {
     })
     @ApiResponses({
     })
-    @GetMapping("adminusers/{id}")
+    @GetMapping("/shops/{did}/adminusers/{id}")
     public Mono<Object> getUserById(@PathVariable("id") Long id) {
 
         return userService.findUserById(id).map(returnObject->{
@@ -346,7 +350,7 @@ public class PrivilegeController {
     })
     @ApiResponses({
     })
-    @GetMapping("adminusers/all")
+    @GetMapping(value = "/shops/{did}/adminusers/all")
     public Mono<Object> findAllUser(
             @RequestParam String userName,
             @RequestParam String mobile,
@@ -478,10 +482,14 @@ public class PrivilegeController {
     @ApiResponses({
             @ApiResponse(code = 0, message = "成功"),
     })
-    @Audit
+//    @Audit
     @DeleteMapping("proxie/{id}")
-    public Mono removeUserProxy(@PathVariable Long id, @LoginUser @ApiIgnore Long userId) {
+//    public Mono removeUserProxy(@PathVariable Long id, @LoginUser @ApiIgnore Long userId) {
+    public Mono removeUserProxy(@PathVariable Long id) {
+
+        Long userId=49L;
         logger.debug("removeUserProxy: id = " + id);
+        System.out.println("进入Controller");
         return userProxyService.removeUserProxy(id, userId);
     }
 

@@ -5,6 +5,7 @@ import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import com.github.pagehelper.PageInfo;
 import demo.Repository.*;
+import demo.model.bo.Privilege;
 import demo.model.bo.Role;
 import demo.model.bo.User;
 import demo.model.bo.UserRole;
@@ -111,33 +112,27 @@ public class UserDao {
 
     public Mono<ReturnObject<List>> getUserRoles(Long id) {
         Mono<User> userMono=userRepository.findById(id).map(User::new);
-        Flux<UserRole> userRoleFlux=Flux.empty();
-        userMono.map(user -> {
-                return userRoleRepository.findAllByUserId(id).map(
-                        userRolePo -> {
-                            Mono<User> creatorMono=userRepository.findById(userRolePo.getCreatorId()).map(User::new);
-                            Mono<Role> roleMono=roleRepository.findById(userRolePo.getRoleId()).map(Role::new);
-                            Mono.zip(creatorMono,roleMono).map(tuple->{
-                                if(tuple.getT2()!=null&&tuple.getT1()!=null){
-                                    UserRole userRole = new UserRole(userRolePo, user, tuple.getT2(), tuple.getT1());
-                                    //校验签名
-                                    if (userRole.authetic()){
-                                        userRoleFlux.concatWithValues(userRole);
-                                        logger.info("getRoleIdByUserId: userId = " + userRolePo.getUserId() + " roleId = " + userRolePo.getRoleId());
-                                    } else {
-                                        logger.error("getUserRoles: Wrong Signature(auth_user_role): id =" + userRolePo.getId());
-                                    }
-                                }
-                                return tuple;
-                            });
-                            return userRolePo;
+//        Flux<UserRole> userRoleFlux=Flux.empty();
+        return userRoleRepository.findAllByUserId(id).flatMap(
+                userRolePo -> {
+                    Mono<User> creatorMono=userRepository.findById(userRolePo.getCreatorId()).map(User::new).log();
+                    Mono<Role> roleMono=roleRepository.findById(userRolePo.getRoleId()).map(Role::new).log();
+                    return Mono.zip(creatorMono,roleMono,userMono).map(tuple->{
+                        if(tuple.getT2()!=null&&tuple.getT1()!=null){
+                            UserRole userRole = new UserRole(userRolePo, tuple.getT3(), tuple.getT2(), tuple.getT1());
+                            //校验签名
+//                                    if (userRole.authetic()){
+//                                        userRoleFlux.concatWithValues(userRole);
+//                                        logger.info("getRoleIdByUserId: userId = " + userRolePo.getUserId() + " roleId = " + userRolePo.getRoleId());
+//                                    } else {
+//                                        logger.error("getUserRoles: Wrong Signature(auth_user_role): id =" + userRolePo.getId());
+//                                    }
+                            return userRole;
                         }
-
-                );
-            }
-
-        );
-        return userRoleFlux.collect(Collectors.toList()).map(ReturnObject::new);
+                        return new UserRole(userRolePo, tuple.getT3(), tuple.getT2(), tuple.getT1());
+                    });
+                }
+        ).collect(Collectors.toList()).map(ReturnObject::new);
     }
 
     public Mono<ReturnObject<List>> findPrivsByUserId(Long id, Long did) {
@@ -153,9 +148,9 @@ public class UserDao {
             }
 
             return userRoleRepository.findAllByUserId(id)
-                    .flatMap(userRolePo -> rolePrivilegeRepository.findById(userRolePo.getRoleId()))
+                    .flatMap(userRolePo -> rolePrivilegeRepository.findAllByRoleId(userRolePo.getRoleId()))
                     .flatMap(rolePrivilegePo -> privilegeRepository.findById(rolePrivilegePo.getPrivilegeId()))
-                    .collect(Collectors.toList()).map(ReturnObject::new);
+                    .map(Privilege::new).collect(Collectors.toList()).map(ReturnObject::new);
         });
     }
 
