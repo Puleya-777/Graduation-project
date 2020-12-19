@@ -1,11 +1,13 @@
 package demo.model.po;
 
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
 @Table("auth_new_user")
+@ToString
 public class NewUserPo {
     /**
      *

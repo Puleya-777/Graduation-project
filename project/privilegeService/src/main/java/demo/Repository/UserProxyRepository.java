@@ -7,6 +7,6 @@ import reactor.core.publisher.Mono;
 
 public interface UserProxyRepository extends ReactiveCrudRepository<UserProxyPo,Long> {
     Flux<UserProxyPo> findAllByUserBId(Long id);
-
     Mono<Integer> deleteUserProxyPoById(Long id);
+
 }

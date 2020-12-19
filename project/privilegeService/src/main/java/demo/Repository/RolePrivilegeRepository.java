@@ -11,4 +11,6 @@ public interface RolePrivilegeRepository extends ReactiveCrudRepository<RolePriv
 
     Mono<RolePrivilegePo> findByRoleIdAndPrivilegeId(Long id, Long pid);
 
+    Mono<Integer> deleteRolePrivilegePoById(Long id);
+
 }

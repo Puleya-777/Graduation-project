@@ -5,15 +5,12 @@ import com.example.util.ReturnObject;
 import com.example.util.bloom.RedisBloomFilter;
 import demo.Repository.NewUserRepository;
 import demo.Repository.UserRepository;
-import demo.model.bo.NewUser;
 import demo.model.bo.User;
 import demo.model.po.NewUserPo;
 import demo.model.po.UserPo;
 import demo.model.vo.NewUserVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +21,6 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
  * @author chei1
@@ -51,64 +47,71 @@ public class NewUserService {
 
 
     @Transactional
-    public ReturnObject register(NewUserVo vo) {
+    public Mono<ReturnObject> register(NewUserVo vo) {
         NewUserPo userPo=new NewUserPo();
         ReturnObject returnObject;
         userPo.setEmail(AES.encrypt(vo.getEmail(), User.AESPASS));
         userPo.setMobile(AES.encrypt(vo.getMobile(),User.AESPASS));
         userPo.setUserName(vo.getUserName());
-        returnObject=checkBloomFilter(userPo);
-        if(returnObject!=null){
-            log.debug("found duplicate in bloomFilter");
-            return returnObject;
-        }
-        //check in user table
-        if(isEmailExist(userPo.getEmail())){
-            setBloomFilterByName("email",userPo);
-            return new ReturnObject(ResponseCode.EMAIL_REGISTERED);
-        }
-        if(isMobileExist(userPo.getMobile())){
-            setBloomFilterByName("mobile",userPo);
-            return  new ReturnObject(ResponseCode.MOBILE_REGISTERED);
-        }
-        if(isUserNameExist(userPo.getUserName())){
-            setBloomFilterByName("userName",userPo);
-            return  new ReturnObject(ResponseCode.USER_NAME_REGISTERED);
-        }
+        /**
+         * 未配置redis，先屏蔽掉以下代码
+         */
+//        returnObject=checkBloomFilter(userPo);
+//        if(returnObject!=null){
+//            log.debug("found duplicate in bloomFilter");
+//            return Mono.just(returnObject);
+//        }
+//        //check in user table
+//        if(isEmailExist(userPo.getEmail())){
+//            setBloomFilterByName("email",userPo);
+//            return Mono.just(new ReturnObject(ResponseCode.EMAIL_REGISTERED));
+//        }
+//        if(isMobileExist(userPo.getMobile())){
+//            setBloomFilterByName("mobile",userPo);
+//            return  Mono.just(new ReturnObject(ResponseCode.MOBILE_REGISTERED));
+//        }
+//        if(isUserNameExist(userPo.getUserName())){
+//            setBloomFilterByName("userName",userPo);
+//            return  Mono.just(new ReturnObject(ResponseCode.USER_NAME_REGISTERED));
+//        }
 
 
         userPo.setPassword(AES.encrypt(vo.getPassword(), User.AESPASS));
         userPo.setAvatar(vo.getAvatar());
         userPo.setName(AES.encrypt(vo.getName(), User.AESPASS));
-        userPo.setDepartId(vo.getDepartId());
+        userPo.setDepartId(vo.getDepartId()==null?0:vo.getDepartId());
         userPo.setOpenId(vo.getOpenId());
         userPo.setGmtCreate(LocalDateTime.now());
-        try{
-            returnObject=new ReturnObject<>(newUserRepository.save(userPo));
-            log.debug("success trying to insert newUser");
-        }
-        catch (DuplicateKeyException e){
-            log.debug("failed trying to insert newUser");
-            String info=e.getMessage();
-            if(info.contains("user_name_uindex")){
-                setBloomFilterByName("userName",userPo);
-                return  new ReturnObject(ResponseCode.USER_NAME_REGISTERED);
-            }
-            if(info.contains("email_uindex")){
-                setBloomFilterByName("email",userPo);
-                return  new ReturnObject(ResponseCode.EMAIL_REGISTERED);
-            }
-            if(info.contains("mobile_uindex")){
-                setBloomFilterByName("mobile",userPo);
-                return  new ReturnObject(ResponseCode.MOBILE_REGISTERED);
-            }
 
-        }
-        catch (Exception e){
-            log.error("Internal error Happened:"+e.getMessage());
-            return  new ReturnObject(ResponseCode.INTERNAL_SERVER_ERR);
-        }
-        return  returnObject;
+        /**
+         * 此处save需作异常处理
+         */
+        return newUserRepository.save(userPo).map(newUserPo -> new ReturnObject(newUserPo));
+//        try{
+//            returnObject=new ReturnObject<>(newUserRepository.save(userPo));
+//            log.debug("success trying to insert newUser");
+//        }
+//        catch (DuplicateKeyException e){
+//            log.debug("failed trying to insert newUser");
+//            String info=e.getMessage();
+//            if(info.contains("user_name_uindex")){
+//                setBloomFilterByName("userName",userPo);
+//                return  new ReturnObject(ResponseCode.USER_NAME_REGISTERED);
+//            }
+//            if(info.contains("email_uindex")){
+//                setBloomFilterByName("email",userPo);
+//                return  new ReturnObject(ResponseCode.EMAIL_REGISTERED);
+//            }
+//            if(info.contains("mobile_uindex")){
+//                setBloomFilterByName("mobile",userPo);
+//                return  new ReturnObject(ResponseCode.MOBILE_REGISTERED);
+//            }
+//
+//        }
+//        catch (Exception e){
+//            log.error("Internal error Happened:"+e.getMessage());
+//            return  new ReturnObject(ResponseCode.INTERNAL_SERVER_ERR);
+//        }
     }
 
     /**
@@ -191,20 +194,14 @@ public class NewUserService {
 
     @Transactional
     public Mono approveUser(boolean approve, Long id) {
-        return Mono.just(approve).map(aBoolean -> {
-            if(aBoolean){
-                log.debug("findUserById: Id =" + id);
-                return newUserRepository.findById(id).map(newUserPo -> {
-                   if (newUserPo==null){
-                       log.error("getNewUser: 新用户数据库不存在该用户 userid=" + id);
-                   }
-                   return Mono.just(newUserPo);
-                }).flatMap(po -> {
-                    physicallyDeleteUser(id);
-                    return addUser(po);
-                });
-            }else{
+        return Mono.just(approve).flatMap(aBoolean -> {
+            if(!aBoolean){
                 return physicallyDeleteUser(id);
+            }else{
+                return newUserRepository.findById(id).flatMap(newUserPo -> {
+                    log.info("成功找到该新用户");
+                    return physicallyDeleteUser(id).flatMap(it-> addUser(newUserPo));
+                }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
             }
         });
     }
@@ -215,34 +212,27 @@ public class NewUserService {
      * @param id 用户 id
      * @return 返回对象 ReturnObj
      */
-    public Mono<ReturnObject> physicallyDeleteUser(Long id) {
-        try {
-            return newUserRepository.findById(id).map(newUserPo -> {
-                if(newUserPo==null){
-                    log.info("用户不存在或已被删除：id = " + id);
-                    return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
-                }else{
-                    newUserRepository.deleteById(id);
-                    log.info("用户 id = " + id + " 已被永久删除");
-                    return new ReturnObject<>();
-                }
+    public Mono<Integer> physicallyDeleteUser(Long id) {
+            return newUserRepository.findById(id).flatMap(newUserPo -> {
+
+                    return newUserRepository.deleteNewUserPoById(id);
             });
 
-        }
-        catch (DataAccessException e)
-        {
-            log.debug("sql exception : " + e.getMessage());
-            return Mono.just(new ReturnObject(ResponseCode.INTERNAL_SERVER_ERR, String.format("数据库错误：%s", e.getMessage())));
-        }
-        catch (Exception e) {
-            // 其他Exception错误
-            log.error("other exception : " + e.getMessage());
-            return Mono.just(new ReturnObject(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了严重的数据库错误：%s", e.getMessage())));
-        }
+
+//        catch (DataAccessException e)
+//        {
+//            log.debug("sql exception : " + e.getMessage());
+//            return Mono.just(new ReturnObject(ResponseCode.INTERNAL_SERVER_ERR, String.format("数据库错误：%s", e.getMessage())));
+//        }
+//        catch (Exception e) {
+//            // 其他Exception错误
+//            log.error("other exception : " + e.getMessage());
+//            return Mono.just(new ReturnObject(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了严重的数据库错误：%s", e.getMessage())));
+//        }
     }
 
-    public Mono addUser(Mono<NewUserPo> newUserPoMono){
-        return newUserPoMono.flatMap(po->{
+    public Mono<ReturnObject> addUser(NewUserPo newUser){
+        return Mono.just(newUser).flatMap(po->{
             UserPo userPo = new UserPo();
             userPo.setEmail(AES.encrypt(po.getEmail(), User.AESPASS));
             userPo.setMobile(AES.encrypt(po.getMobile(), User.AESPASS));
@@ -251,30 +241,29 @@ public class NewUserService {
             userPo.setDepartId(po.getDepartId());
             userPo.setOpenId(po.getOpenId());
             userPo.setGmtCreate(LocalDateTime.now());
-            try{
-                userRepository.save(userPo);
-                return userRepository.findByUserNameAndMobile(po.getUserName(),AES.encrypt(po.getMobile(), User.AESPASS)).map(poo->{
+            userPo.setPassword(newUser.getPassword());
+                return userRepository.save(userPo).map(poo->{
                     if(poo!=null){
-                        log.debug("success insert User: " + userPo.getId());
+                        log.info("success insert User: " + userPo.getId());
                     }
                     return new ReturnObject<>(poo);
                 });
-            }
-            catch (DataAccessException e)
-            {
-                if (Objects.requireNonNull(e.getMessage()).contains("auth_user.user_name_uindex")) {
-                    //若有重复名则修改失败
-                    log.debug("insertUser: have same user name = " + userPo.getName());
-                    return Mono.just(new ReturnObject<>(ResponseCode.ROLE_REGISTERED, String.format("用户名重复：" + userPo.getName())));
-                } else {
-                    log.debug("sql exception : " + e.getMessage());
-                    return Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("数据库错误：%s", e.getMessage())));
-                }
-            } catch (Exception e) {
-                // 其他Exception错误
-                log.error("other exception : " + e.getMessage());
-                return  Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了严重的数据库错误：%s", e.getMessage())));
-            }
+
+//            catch (DataAccessException e)
+//            {
+//                if (Objects.requireNonNull(e.getMessage()).contains("auth_user.user_name_uindex")) {
+//                    //若有重复名则修改失败
+//                    log.debug("insertUser: have same user name = " + userPo.getName());
+//                    return Mono.just(new ReturnObject<>(ResponseCode.ROLE_REGISTERED, String.format("用户名重复：" + userPo.getName())));
+//                } else {
+//                    log.debug("sql exception : " + e.getMessage());
+//                    return Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("数据库错误：%s", e.getMessage())));
+//                }
+//            } catch (Exception e) {
+//                // 其他Exception错误
+//                log.error("other exception : " + e.getMessage());
+//                return  Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了严重的数据库错误：%s", e.getMessage())));
+//            }
         });
     }
 

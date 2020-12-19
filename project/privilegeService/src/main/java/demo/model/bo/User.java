@@ -178,7 +178,7 @@ public class User implements VoObject {
      * @param vo vo 对象
      * @return po 对象
      */
-    public UserPo createUpdatePo(UserVo vo) {
+    public UserPo createUpdatePo(UserVo vo,UserPo it) {
         String nameEnc = vo.getName() == null ? null : AES.encrypt(vo.getName(), User.AESPASS);
         String mobEnc = vo.getMobile() == null ? null : AES.encrypt(vo.getMobile(), User.AESPASS);
         String emlEnc = vo.getEmail() == null ? null : AES.encrypt(vo.getEmail(), User.AESPASS);
@@ -192,7 +192,12 @@ public class User implements VoObject {
         po.setEmail(emlEnc);
         po.setState(state);
 
-        po.setGmtCreate(null);
+        po.setUserName(it.getUserName());
+        po.setPassword(it.getPassword());
+        po.setGmtCreate(it.getGmtCreate());
+        po.setDepartId(it.getDepartId());
+        po.setCreatorId(it.getCreatorId());
+
         po.setGmtModified(LocalDateTime.now());
 
         // 签名：user_name,password,mobile,email,open_id,state,depart_id,creator
