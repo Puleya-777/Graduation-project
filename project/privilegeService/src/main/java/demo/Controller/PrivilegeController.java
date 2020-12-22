@@ -764,4 +764,27 @@ public class PrivilegeController {
         return newUserService.getAllNewUser(did);
     }
 
+    @ApiOperation(value = "登录")
+    @PostMapping("/privileges/login")
+    public Mono login(@Validated @RequestBody LoginVo loginVo, BindingResult bindingResult
+            , HttpServletResponse httpServletResponse,HttpServletRequest httpServletRequest){
+        /* 处理参数校验错误 */
+        System.out.println("1");
+        Object o = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if(o != null){
+            return Mono.just(o);
+        }
+        System.out.println("2");
+        String ip = IpUtil.getIpAddr(httpServletRequest);
+        System.out.println("3");
+        return userService.login(loginVo.getUserName(), loginVo.getPassword(), ip).map(jwt->{
+            System.out.println("controller-1");
+            if(jwt.getData() == null){
+                return ResponseUtil.fail(jwt.getCode(), jwt.getErrmsg());
+            }else{
+                return ResponseUtil.ok(jwt.getData());
+            }
+        });
+    }
+
 }

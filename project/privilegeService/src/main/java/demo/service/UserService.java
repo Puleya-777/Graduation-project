@@ -1,10 +1,7 @@
 package demo.service;
 
 import com.example.model.VoObject;
-import com.example.util.Common;
-import com.example.util.RandomCaptcha;
-import com.example.util.ResponseCode;
-import com.example.util.ReturnObject;
+import com.example.util.*;
 import com.example.util.encript.AES;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -21,6 +18,7 @@ import demo.model.vo.UserVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -28,10 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -50,11 +51,24 @@ public class UserService {
     @Autowired
     UserRoleRepository userRoleRepository;
 
-    @Autowired
-    RedisTemplate redisTemplate;
+//    @Autowired
+//    RedisTemplate redisTemplate;
 //    @Autowired
 //    private RedisTemplate<String, Serializable> redisTemplate;
+    @Resource
+    private RedisTemplate<String, Serializable> redisTemplate;
 
+    @Value("${privilegeservice.login.jwtExpire}")
+    private Integer jwtExpireTime;
+
+    @Value("${privilegeservice.login.multiply}")
+    private Boolean canMultiplyLogin;
+
+    /**
+     * 分布式锁的过期时间（秒）
+     */
+    @Value("${privilegeservice.lockerExpireTime}")
+    private long lockerExpireTime;
 
 
     /**
@@ -297,5 +311,135 @@ public class UserService {
             }
         });
     }
+
+    @Transactional
+    public Mono<ReturnObject> login(String userName, String password, String ipAddr)
+    {
+        System.out.println("userservice-login");
+        return userDao.getUserByName((userName)).map(retObj->{
+            System.out.println("service-userDao.getUserByName-1");
+            if (retObj.getCode() != ResponseCode.OK){
+                return retObj;
+            }
+            User user = (User) retObj.getData();
+            final String thepassword = AES.encrypt(password, User.AESPASS);
+            if(user == null || !thepassword.equals(user.getPassword())){
+                return new ReturnObject<>(ResponseCode.AUTH_INVALID_ACCOUNT);
+            }
+            if (user.getState() != User.State.NORM){
+                return new ReturnObject<>(ResponseCode.AUTH_USER_FORBIDDEN);
+            }
+            if (!user.getEmailVerified()){
+                return new ReturnObject<>(ResponseCode.EMAIL_NOTVERIFIED);
+            }
+            if (!user.getMobileVerified()){
+                return new ReturnObject<>(ResponseCode.MOBILE_NOTVERIFIED);
+            }
+            if (!user.authetic()){
+                StringBuilder message = new StringBuilder().append("Login: userid = ").append(user.getId()).
+                        append(", username =").append(user.getUserName()).append(" 信息被篡改");
+                logger.error(message.toString());
+                return new ReturnObject<>(ResponseCode.AUTH_USER_FORBIDDEN, "信息被篡改");
+            }
+            String key = "up_" + user.getId();
+            logger.debug("login: key = "+ key);
+            if(redisTemplate.hasKey(key) && !canMultiplyLogin){
+                logger.debug("login: multiply  login key ="+key);
+                // 用户重复登录处理
+                Set<Serializable > set = redisTemplate.opsForSet().members(key);
+                redisTemplate.delete(key);
+
+                /* 将旧JWT加入需要踢出的集合 */
+                String jwt = null;
+                for (Serializable str : set) {
+                    /* 找出JWT */
+                    if((str.toString()).length() > 8){
+                        jwt =  str.toString();
+                        break;
+                    }
+                }
+                logger.debug("login: oldJwt" + jwt);
+                this.banJwt(jwt);
+            }
+            //创建新的token
+            JwtHelper jwtHelper = new JwtHelper();
+            String jwt = jwtHelper.createToken(user.getId(),user.getDepartId(), jwtExpireTime);
+            System.out.println("service-userDao.loadUserPriv-begin");
+            userDao.loadUserPriv(user.getId(), jwt);
+            System.out.println("service-userDao.loadUserPriv-over");
+            logger.debug("login: newJwt = "+ jwt);
+            System.out.println("service-userDao.setLoginIPAndPosition-begin");
+            userDao.setLoginIPAndPosition(user.getId(),ipAddr, LocalDateTime.now());
+            System.out.println("service-userDao.setLoginIPAndPosition-over");
+            return new ReturnObject<>(jwt);
+        });
+    }
+
+    /**
+     * 禁止持有特定令牌的用户登录
+     * @param jwt JWT令牌
+     */
+    private void banJwt(String jwt){
+        String[] banSetName = {"BanJwt_0", "BanJwt_1"};
+        long bannIndex = 0;
+        if (!redisTemplate.hasKey("banIndex")){
+            redisTemplate.opsForValue().set("banIndex", Long.valueOf(0));
+        } else {
+            logger.debug("banJwt: banIndex = " +redisTemplate.opsForValue().get("banIndex"));
+            bannIndex = Long.parseLong(redisTemplate.opsForValue().get("banIndex").toString());
+        }
+        logger.debug("banJwt: banIndex = " + bannIndex);
+        String currentSetName = banSetName[(int) (bannIndex % banSetName.length)];
+        logger.debug("banJwt: currentSetName = " + currentSetName);
+        if(!redisTemplate.hasKey(currentSetName)) {
+            // 新建
+            logger.debug("banJwt: create ban set" + currentSetName);
+            redisTemplate.opsForSet().add(currentSetName, jwt);
+            redisTemplate.expire(currentSetName,jwtExpireTime * 2,TimeUnit.SECONDS);
+        }else{
+            //准备向其中添加元素
+            if(redisTemplate.getExpire(currentSetName, TimeUnit.SECONDS) > jwtExpireTime) {
+                // 有效期还长，直接加入
+                logger.debug("banJwt: add to exist ban set" + currentSetName);
+                redisTemplate.opsForSet().add(currentSetName, jwt);
+            } else {
+                // 有效期不够JWT的过期时间，准备用第二集合，让第一个集合自然过期
+                // 分步式加锁
+                logger.debug("banJwt: switch to next ban set" + currentSetName);
+                long newBanIndex = bannIndex;
+                while (newBanIndex == bannIndex &&
+                        !redisTemplate.opsForValue().setIfAbsent("banIndexLocker","nouse", lockerExpireTime, TimeUnit.SECONDS)){
+                    //如果BanIndex没被其他线程改变，且锁获取不到
+                    try {
+                        Thread.sleep(10);
+                        //重新获得新的BanIndex
+                        newBanIndex = (Long) redisTemplate.opsForValue().get("banIndex");
+                    }catch (InterruptedException e){
+                        logger.error("banJwt: 锁等待被打断");
+                    }
+                    catch (IllegalArgumentException e){
+
+                    }
+                }
+                if (newBanIndex == bannIndex) {
+                    //切换ban set
+                    bannIndex = redisTemplate.opsForValue().increment("banIndex");
+                }else{
+                    //已经被其他线程改变
+                    bannIndex = newBanIndex;
+                }
+
+                currentSetName = banSetName[(int) (bannIndex % banSetName.length)];
+                //启用之前，不管有没有，先删除一下，应该是没有，保险起见
+                redisTemplate.delete(currentSetName);
+                logger.debug("banJwt: next ban set =" + currentSetName);
+                redisTemplate.opsForSet().add(currentSetName, jwt);
+                redisTemplate.expire(currentSetName,jwtExpireTime * 2,TimeUnit.SECONDS);
+                // 解锁
+                redisTemplate.delete("banIndexLocker");
+            }
+        }
+    }
+
 
 }
