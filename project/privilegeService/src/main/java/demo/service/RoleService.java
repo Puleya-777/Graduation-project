@@ -87,7 +87,7 @@ public class RoleService {
                                 return null;
                             })).collectList().flatMap(list -> Mono.just(new ReturnObject(list)));
 
-        });
+        }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
     }
 
     /**
@@ -114,16 +114,21 @@ public class RoleService {
             if(po==null){
                 return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
             }else {
-                rolePrivilegeRepository.deleteById(id);
-                Long roleid = po.getRoleId();
-                String key = "r_" + roleid;
-                //清除缓存被删除的的角色,重新load
-                if(redisTemplate.hasKey(key)){
-                    redisTemplate.delete(key);
-                }
-                return Mono.just(new ReturnObject<>());
+                return rolePrivilegeRepository.deleteRolePrivilegePoById(id).flatMap(it->{
+                    if(it==1){
+                        Long roleid = po.getRoleId();
+                        String key = "r_" + roleid;
+                        //清除缓存被删除的的角色,重新load
+                        if(redisTemplate.hasKey(key)){
+                            redisTemplate.delete(key);
+                        }
+                        return Mono.just(new ReturnObject<>());
+                    }else{
+                        return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+                    }
+                });
             }
-        }).flatMap(ret->{
+        }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST)).flatMap(ret->{
             if(ret.getCode()==ResponseCode.OK) {
                 clearuserByroleId(id);
             }
@@ -185,58 +190,19 @@ public class RoleService {
     @Transactional
     public Mono<ReturnObject> addRolePriv(Long roleId, Long privId, Long userId){
         return Mono.zip(userRepository.findById(userId),privilegeRepository.findById(privId),roleRepository.findById(roleId)).flatMap(
-                turple->{
-                    if(turple.getT1()==null||turple.getT2()==null||turple.getT3()==null){
+                tuple->{
+                    log.info("三个po都存在");
+                    if(tuple.getT1()==null||tuple.getT2()==null||tuple.getT3()==null){
                         return Mono.just(new ReturnObject<VoObject>(ResponseCode.RESOURCE_ID_NOTEXIST));
                     }else{
                         return rolePrivilegeRepository.findByRoleIdAndPrivilegeId(roleId,privId).flatMap(po1->{
-                            RolePrivilegePo roleprivilegepo = new RolePrivilegePo();
-                            LocalDateTime localDateTime=LocalDateTime.now();
-                            if(po1==null){
-                                roleprivilegepo.setRoleId(roleId);
-                                roleprivilegepo.setPrivilegeId(privId);
-                                roleprivilegepo.setCreatorId(userId);
-                                roleprivilegepo.setGmtCreate(localDateTime);
-                                StringBuilder signature = Common.concatString("-", roleprivilegepo.getRoleId().toString(),
-                                        roleprivilegepo.getPrivilegeId().toString(), roleprivilegepo.getCreatorId().toString(), localDateTime.toString());
-                                String newSignature = SHA256.getSHA256(signature.toString());
-                                roleprivilegepo.setSignature(newSignature);
-                                try {
-                                    rolePrivilegeRepository.save(roleprivilegepo);
-                                    return rolePrivilegeRepository.findByRoleIdAndPrivilegeId(roleId,privId).flatMap(po2->{
-                                        if (po2 == null) {
-                                            //插入失败
-                                            return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
-                                        } else {
-                                            //插入成功
-                                            //清除角色权限
-                                            String key = "r_" + roleId;
-                                            if(redisTemplate.hasKey(key)){
-                                                redisTemplate.delete(key);
-                                            }
-                                            //组装返回的bo
-                                            RolePrivilege rolePrivilege = new RolePrivilege();
-                                            rolePrivilege.setId(roleprivilegepo.getId());
-                                            rolePrivilege.setCreator(turple.getT1());
-                                            rolePrivilege.setRole(turple.getT3());
-                                            rolePrivilege.setPrivilege(turple.getT2());
-                                            rolePrivilege.setGmtModified(localDateTime.toString());
-
-                                            return Mono.just(new ReturnObject<VoObject>(rolePrivilege));
-
-                                        }
-                                    });
-                                }catch (DataAccessException e){
-                                    // 数据库错误
-                                    return Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("数据库错误：%s", e.getMessage())));
-                                }catch (Exception e) {
-                                    // 其他Exception错误
-                                    return Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了错误：%s", e.getMessage())));
-                                }
-                            }else{
+                            if(po1!=null){
                                 return Mono.just(new ReturnObject<>(ResponseCode.FIELD_NOTVALID, String.format("角色权限已存在")));
+                            }else{
+                                return insertRolePriv(tuple.getT1(),tuple.getT2(),tuple.getT3());
                             }
-                        }).flatMap(ret->{
+
+                        }).switchIfEmpty(insertRolePriv(tuple.getT1(),tuple.getT2(),tuple.getT3())).flatMap(ret->{
                             if(ret.getCode()==ResponseCode.OK) {
                                 clearuserByroleId(roleId);
                             }
@@ -247,5 +213,53 @@ public class RoleService {
         );
     }
 
+    public Mono<ReturnObject<?>> insertRolePriv(UserPo userPo,PrivilegePo privilegePo,RolePo rolePo){
+        RolePrivilegePo roleprivilegepo = new RolePrivilegePo();
+        LocalDateTime localDateTime=LocalDateTime.now();
+        roleprivilegepo.setRoleId(rolePo.getId());
+        roleprivilegepo.setPrivilegeId(privilegePo.getId());
+        roleprivilegepo.setCreatorId(userPo.getId());
+        roleprivilegepo.setGmtCreate(localDateTime);
+        StringBuilder signature = Common.concatString("-", roleprivilegepo.getRoleId().toString(),
+                roleprivilegepo.getPrivilegeId().toString(), roleprivilegepo.getCreatorId().toString(), localDateTime.toString());
+        String newSignature = SHA256.getSHA256(signature.toString());
+        roleprivilegepo.setSignature(newSignature);
+        //return rolePrivilegeRepository.findByRoleIdAndPrivilegeId(rolePo.getId(),privilegePo.getId())
+            return rolePrivilegeRepository.save(roleprivilegepo).map(po2->{
+                if (po2 == null) {
+                    //插入失败
+                    return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
+                } else {
+                    //插入成功
+                    //清除角色权限
+                    String key = "r_" + rolePo.getId();
+                    if(redisTemplate.hasKey(key)){
+                        redisTemplate.delete(key);
+                    }
+                    //组装返回的bo
+                    RolePrivilege rolePrivilege = new RolePrivilege();
+                    rolePrivilege.setId(roleprivilegepo.getId());
+                    rolePrivilege.setCreator(userPo);
+                    rolePrivilege.setRole(rolePo);
+                    rolePrivilege.setPrivilege(privilegePo);
+                    rolePrivilege.setGmtModified(localDateTime.toString());
+
+                    return new ReturnObject<VoObject>(rolePrivilege);
+
+                }
+            }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+            //此处为插入失败，但错误码不匹配
+
+        /**
+         * 此处需异常处理
+         */
+//        }catch (DataAccessException e){
+//            // 数据库错误
+//            return Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("数据库错误：%s", e.getMessage())));
+//        }catch (Exception e) {
+//            // 其他Exception错误
+//            return Mono.just(new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR, String.format("发生了错误：%s", e.getMessage())));
+//        }
+    }
 
 }

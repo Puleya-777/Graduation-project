@@ -3,6 +3,35 @@ spring:
     #    url: r2dbcs:mysql://139.9.160.14:3306/test
     #    username: Flux
     #    password: root
-    password: root123!
-    url: r2dbcs:mysql://puleya.mysql.polardb.rds.aliyuncs.com:3306/webflux
-    username: root123
+    password: 123456
+    url: r2dbcs:mysql://localhost:3306/webflux?serverTimezone=UTC
+    username: root
+
+  redis:
+    database: 0
+    timeout: 0
+    host: 127.0.0.1
+    port: 6379
+    password:
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 8
+      min-idle: 0
+
+privilegeservice:
+  #是否对数据库中的未初始化的数据初始化
+  initialization: true
+  #分布式锁失效时间（秒）
+  lockerExpireTime: 30
+  user:
+    # user的权限字在Redis中失效秒数
+    expiretime: 600
+  role:
+    # role的权限字在Redis中失效秒数
+    expiretime: 600
+  login:
+    #是否允许重复登录
+    multiply: false
+    #jwt过期的时间(秒)
+    jwtExpire: 3600

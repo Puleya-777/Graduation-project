@@ -52,6 +52,8 @@ public class PrivilegeController {
     UserProxyService userProxyService;
     @Autowired
     NewUserService newUserService;
+    private final UserProxyRepository userProxyRepository;
+
     private final UserRepository userRepository;
 
     private final UserRoleRepository userRoleRepository;
@@ -62,7 +64,8 @@ public class PrivilegeController {
 
     private final RolePrivilegeRepository rolePrivilegeRepository;
 
-    public PrivilegeController(UserRepository userRepository, UserRoleRepository userRoleRepository, RoleRepository roleRepository, PrivilegeRepository privilegeRepository, RolePrivilegeRepository rolePrivilegeRepository) {
+    public PrivilegeController(UserProxyRepository userProxyRepository, UserRepository userRepository, UserRoleRepository userRoleRepository, RoleRepository roleRepository, PrivilegeRepository privilegeRepository, RolePrivilegeRepository rolePrivilegeRepository) {
+        this.userProxyRepository = userProxyRepository;
         this.userRepository = userRepository;
         this.userRoleRepository = userRoleRepository;
         this.roleRepository = roleRepository;
@@ -92,9 +95,9 @@ public class PrivilegeController {
     })
     @Audit
     @DeleteMapping("/shops/{did}/adminusers/{userid}/roles/{roleid}")
-    public Mono<Object> revokeRole(@PathVariable Long did, @PathVariable Long userid, @PathVariable Long roleid) {
-
-        return userService.revokeRole(userid,roleid,did).map(Common::decorateReturnObject);
+    public Mono revokeRole(@PathVariable Long did, @PathVariable Long userid, @PathVariable Long roleid) {
+            return userRoleRepository.deleteUserRolePoByUserIdAndAndRoleId(userid,roleid);
+       // return userService.revokeRole(userid,roleid,did).map(Common::decorateReturnObject);
     }
 
     /***2
@@ -471,7 +474,7 @@ public class PrivilegeController {
      */
 
     /**
-     * 解除用户代理关系
+     * 解除用户代理关系(pass)
      */
     @ApiOperation(value = "解除用户代理关系")
     @ApiImplicitParams({
@@ -481,14 +484,10 @@ public class PrivilegeController {
     @ApiResponses({
             @ApiResponse(code = 0, message = "成功"),
     })
-//    @Audit
+    @Audit
     @DeleteMapping("proxie/{id}")
-//    public Mono removeUserProxy(@PathVariable Long id, @LoginUser @ApiIgnore Long userId) {
-    public Mono removeUserProxy(@PathVariable Long id) {
-
-        Long userId=49L;
-        logger.debug("removeUserProxy: id = " + id);
-        System.out.println("进入Controller");
+    public Mono removeUserProxy(@PathVariable Long id, @LoginUser @ApiIgnore Long userId) {
+        logger.info("removeUserProxy: id = " + id);
         return userProxyService.removeUserProxy(id, userId);
     }
 
@@ -510,10 +509,7 @@ public class PrivilegeController {
     }
 
     /**
-     * 禁止代理关系
-     * @param id 代理关系id
-     * @param did 部门id
-     * @return
+     * 禁止代理关系(pass)
      */
     @ApiOperation(value = "禁止代理关系")
     @ApiImplicitParams({
@@ -524,16 +520,14 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
     })
     @Audit
-    @DeleteMapping("shops/{did}/allproxie/{id}")
+    @DeleteMapping("shops/{did}/proxies/{id}")
     public Mono removeAllProxies(@PathVariable Long id,@PathVariable Long did) {
         logger.debug("removeAllProxies: id) = " + id);
         return userProxyService.removeAllProxies(id,did);
     }
 
     /**
-     * 注册用户
-     * @param vo NewUserVo
-     * @param result 参数校验
+     * 注册用户(pass?bloom过滤器部分)
      * @return
      */
     @ApiOperation(value="注册用户")
@@ -551,16 +545,17 @@ public class PrivilegeController {
         if(result.hasErrors()){
             return Mono.just(Common.processFieldErrors(result,httpServletResponse));
         }
-        ReturnObject returnObject=newUserService.register(vo);
-        if(returnObject.getCode()==ResponseCode.OK){
-            return Mono.just(ResponseUtil.ok(returnObject.getData()));
-        }
-        else {
-            return Mono.just(ResponseUtil.fail(returnObject.getCode()));
-        }
+        return newUserService.register(vo).map(ret->{
+            if(ret.getCode()==ResponseCode.OK){
+                return Mono.just(ResponseUtil.ok(ret.getData()));
+            }
+            else {
+                return Mono.just(ResponseUtil.fail(ret.getCode()));
+            }
+        });
     }
     /**
-     * 查询所有状态
+     * 查询所有状态(pass)
      * @return Object
      */
     @ApiOperation(value="获得管理员用户的所有状态")
@@ -578,10 +573,7 @@ public class PrivilegeController {
     }
 
     /**
-     * auth004: 修改自己的信息
-     * @param vo 修改信息 UserVo 视图
-     * @param bindingResult 校验信息
-     * @return Object
+     * auth004: 修改自己的信息(pass)
      */
     @ApiOperation(value = "修改自己的信息")
     @ApiImplicitParams({
@@ -597,27 +589,26 @@ public class PrivilegeController {
     @Audit
     @PutMapping("adminusers")
     public Mono changeMyAdminselfInfo(@LoginUser Long id, @Validated @RequestBody UserVo vo, BindingResult bindingResult) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("modifyUserInfo: id = "+ id +" vo = " + vo);
+        if(bindingResult.hasErrors()){
+            return Mono.just(Common.processFieldErrors(bindingResult,httpServletResponse));
         }
-        return Mono.just(Common.processFieldErrors(bindingResult, httpServletResponse)).map(it->{
-            if(it!=null){
-                logger.info("incorrect data received while modifyUserInfo id = " + id);
-                return it;
-            }else{
-                //return Common.decorateReturnObject();
+        logger.info("modifyUserInfo: id = "+ id +" vo = " + vo);
+        if (logger.isDebugEnabled()) {
+            logger.info("modifyUserInfo: id = "+ id +" vo = " + vo);
+        }
+//        return Mono.just(Common.processFieldErrors(bindingResult, httpServletResponse)).map(it->{
+//            if(it!=null){
+//                logger.info("incorrect data received while modifyUserInfo id = " + id);
+//                return it;
+//            }else{
+//                //return Common.decorateReturnObject();
                 return userService.modifyUserInfo(id, vo).map(Common::decorateReturnObject);
-            }
-        });
+//            }
+//        });
     }
 
     /**
-     * auth002: 用户重置密码
-     * @param vo 重置密码对象
-     * @param httpServletResponse HttpResponse
-     * @param httpServletRequest HttpRequest
-     * @param bindingResult 校验信息
-     * @return Object
+     * auth002: 用户重置密码(pass)
      */
     @ApiOperation(value="用户重置密码")
     @ApiResponses({
@@ -633,23 +624,19 @@ public class PrivilegeController {
         if (logger.isDebugEnabled()) {
             logger.debug("resetPassword");
         }
-        /* 处理参数校验错误 */
-        return Mono.just(Common.processFieldErrors(bindingResult, httpServletResponse)).map(o->{
-            if(o!=null){
-                return o;
-            }else{
+//        /* 处理参数校验错误 */
+//        return Mono.just(Common.processFieldErrors(bindingResult, httpServletResponse)).map(o->{
+//            if(o!=null){
+//                return o;
+//            }else{
                 String ip = IpUtil.getIpAddr(httpServletRequest);
-                return userService.resetPassword(vo,ip).map(it->{
-                    return Common.decorateReturnObject(it);
-                });
-            }
-        });
+                return userService.resetPassword(vo,ip).map(it-> Common.decorateReturnObject(it));
+//            }
+//        });
     }
 
     /**
      * auth002: 用户修改密码
-     * @param vo 修改密码对象
-     * @return Object
      */
     @ApiOperation(value="用户修改密码",produces = "application/json")
     @ApiResponses({
@@ -667,8 +654,7 @@ public class PrivilegeController {
     }
 
     /**
-     * 获得角色所有权限
-
+     * 获得角色所有权限(pass)
      */
     @ApiOperation(value = "获得角色所有权限")
     @ApiImplicitParams({
@@ -691,7 +677,7 @@ public class PrivilegeController {
     }
 
     /**
-     * 取消角色权限
+     * 取消角色权限(pass)
      */
     @ApiOperation(value = "取消角色权限")
     @ApiImplicitParams({
@@ -704,13 +690,16 @@ public class PrivilegeController {
     @Audit
     @DeleteMapping("roleprivileges/{id}")
     public Mono delRolePriv(@PathVariable Long id){
-        logger.debug("delRolePriv: id = "+ id);
+        logger.info("delRolePriv: id = "+ id);
+        /**
+         * 这边很奇怪，默认return fail
+         */
         return roleService.delRolePriv(id).map(ret -> ResponseUtil.fail(ret.getCode(), ret.getErrmsg()));
         
     }
 
     /**
-     * 增加角色权限
+     * 增加角色权限(pass)
      */
     @ApiOperation(value = "新增角色权限")
     @ApiImplicitParams({
@@ -723,8 +712,9 @@ public class PrivilegeController {
     })
     @Audit
     @PostMapping("roles/{roleid}/privileges/{privilegeid}")
-    public Mono addRolePriv(@PathVariable Long roleid, @PathVariable Long privilegeid, @LoginUser @ApiIgnore @RequestParam(required = false, defaultValue = "0") Long userId){
-        logger.debug("addRolePriv: id = "+ roleid+" userid: id = "+ userId);
+    public Mono addRolePriv(@PathVariable Long roleid, @PathVariable Long privilegeid, @LoginUser @ApiIgnore @RequestParam(required = false, defaultValue = "1") Long userId){
+        logger.info("addRolePriv: id = "+ roleid+" userid: id = "+ userId);
+
        return roleService.addRolePriv(roleid, privilegeid, userId).map(returnObject -> {
            if (returnObject.getCode() == ResponseCode.OK) {
                return Common.getRetObject(returnObject);
@@ -736,10 +726,7 @@ public class PrivilegeController {
     }
 
     /**
-     * auth014: 管理员审核用户
-     * @param id: 用户 id
-     * @param bindingResult 校验信息
-     * @return Object
+     * auth014: 管理员审核用户(pass)
      */
     @ApiOperation(value = "管理员审核用户")
     @ApiImplicitParams({
@@ -756,8 +743,8 @@ public class PrivilegeController {
     })
     @Audit // 需要认证
     @PutMapping("shops/{did}/adminusers/{id}/approve")
-    public Mono approveUser(@PathVariable Long id,@PathVariable Long did, BindingResult bindingResult,@RequestBody Boolean approve,@Depart Long shopid) {
-        logger.debug("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve);
+    public Mono approveUser(@PathVariable Long id,@PathVariable Long did,@RequestBody Boolean approve,@Depart Long shopid) {
+        logger.info("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve);
         if(did==0|| did.equals(shopid))
         {
             return newUserService.approveUser(approve,id);
@@ -770,11 +757,34 @@ public class PrivilegeController {
     }
 
     /**
-     * 获取新用户列表
+     * 获取新用户列表(pass?使用Flux,需前后端联调)
      */
-    @GetMapping("shops/{did}/adminusers/allnew")
+    @GetMapping(value = "shops/{did}/adminusers/allnew",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
     public Flux getNewUser(@PathVariable Long did){
         return newUserService.getAllNewUser(did);
+    }
+
+    @ApiOperation(value = "登录")
+    @PostMapping("/privileges/login")
+    public Mono login(@Validated @RequestBody LoginVo loginVo, BindingResult bindingResult
+            , HttpServletResponse httpServletResponse,HttpServletRequest httpServletRequest){
+        /* 处理参数校验错误 */
+        System.out.println("1");
+        Object o = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if(o != null){
+            return Mono.just(o);
+        }
+        System.out.println("2");
+        String ip = IpUtil.getIpAddr(httpServletRequest);
+        System.out.println("3");
+        return userService.login(loginVo.getUserName(), loginVo.getPassword(), ip).map(jwt->{
+            System.out.println("controller-1");
+            if(jwt.getData() == null){
+                return ResponseUtil.fail(jwt.getCode(), jwt.getErrmsg());
+            }else{
+                return ResponseUtil.ok(jwt.getData());
+            }
+        });
     }
 
 }

@@ -1,8 +1,10 @@
 package demo.dao;
 
 import com.example.model.VoObject;
+import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import com.example.util.encript.SHA256;
 import com.github.pagehelper.PageInfo;
 import demo.repository.*;
 import demo.model.bo.Privilege;
@@ -11,15 +13,24 @@ import demo.model.bo.User;
 import demo.model.bo.UserRole;
 import demo.model.po.RolePo;
 import demo.model.po.UserPo;
+import demo.model.po.UserProxyPo;
 import demo.model.po.UserRolePo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Repository
@@ -38,6 +49,15 @@ public class UserDao {
     PrivilegeRepository privilegeRepository;
     @Autowired
     RolePrivilegeRepository rolePrivilegeRepository;
+
+    @Autowired
+    UserProxyRepository userProxyRepository;
+    @Resource
+    private RedisTemplate<String, Serializable> redisTemplate;
+    @Value("${privilegeservice.user.expiretime}")
+    private long timeout;
+    @Autowired
+    RoleDao roleDao;
 
     public Mono<Boolean> checkUserDid(Long userid, Long departid) {
         return userRepository.findById(userid).map(userPo -> {
@@ -160,5 +180,162 @@ public class UserDao {
     public Mono<PageInfo<UserPo>> findAllUsers(String userNameAES, String mobileAES, Integer page, Integer pagesize) {
         return userRepository.findAllByUserNameAndMobile(userNameAES,mobileAES)
                 .collect(Collectors.toList()).map(PageInfo::new);
+    }
+
+    public Mono<ReturnObject<User>> getUserByName(String userName) {
+//        try{
+        System.out.println("userdao-getUserByName");
+        Mono<UserPo> findResult = userRepository.findByUserName(userName);
+        System.out.println("userdao-findByUserName");
+        if ( findResult== null) {
+            System.out.println("not-found-user-byName");
+            return Mono.just(new ReturnObject<>());
+        } else {
+            return findResult.map(users->{
+                User user = new User(users);
+                if (!user.authetic()) {
+                    StringBuilder message = new StringBuilder().append("getUserByName: ").append("id= ")
+                            .append(user.getId()).append(" username=").append(user.getUserName());
+                    logger.error(message.toString());
+                    return new ReturnObject<>(ResponseCode.RESOURCE_FALSIFY);
+                } else {
+                    return new ReturnObject<>(user);
+                }
+            });
+        }
+//        }catch (DataAccessException e){
+//            StringBuilder message = new StringBuilder().append("getUserByName: ").append(e.getMessage());
+//            logger.error(message.toString());
+//            return Mono.just(new ReturnObject<>()).map(ReturnObject::new);
+//        }
+    }
+
+    public Mono<Integer> loadUserPriv(Long id, String jwt) {
+
+        String key = "u_" + id;
+        String aKey = "up_" + id;
+        System.out.println("userdao-loadUserPriv");
+        return getProxyIdsByUserId(id).map(proxyIds->{
+            System.out.println("userdao-getProxyIdsByUserId-overnext");
+            List<String> proxyUserKey = new ArrayList<>(proxyIds.size());
+            for (Long proxyId : proxyIds) {
+                if (!redisTemplate.hasKey("u_" + proxyId)) {
+                    logger.debug("loadUserPriv: loading proxy user. proxId = " + proxyId);
+                    System.out.println("userdao-loadSingleUserPriv-begin-1");
+                    loadSingleUserPriv(proxyId);
+                    System.out.println("userdao-loadSingleUserPriv-over-1");
+                }
+                proxyUserKey.add("u_" + proxyId);
+            }
+            if (!redisTemplate.hasKey(key)) {
+                logger.debug("loadUserPriv: loading user. id = " + id);
+                System.out.println("userdao-loadSingleUserPriv-begin-2");
+                loadSingleUserPriv(id);
+                System.out.println("userdao-loadSingleUserPriv-over-2");
+            }
+            redisTemplate.opsForSet().unionAndStore(key, proxyUserKey, aKey);
+            redisTemplate.opsForSet().add(aKey, jwt);
+            long randTimeout = Common.addRandomTime(timeout);
+            redisTemplate.expire(aKey, randTimeout, TimeUnit.SECONDS);
+            return 0;
+        });
+    }
+
+    public Mono<Boolean> setLoginIPAndPosition(Long userId, String IPAddr, LocalDateTime date) {
+        System.out.println("userdao-setLoginIPAndPosition");
+        System.out.println("id:"+userId);
+        System.out.println("ip:"+IPAddr);
+        System.out.println("time:"+LocalDateTime.now());
+        return userRepository.findById(userId).map(userPo->{
+            System.out.println("userdao-userRepository.findById");
+            userPo.setLastLoginIp(IPAddr);
+            userPo.setLastLoginTime(date);
+            userRepository.save(userPo);
+            return true;
+        });
+    }
+
+    private Mono<List<Long>> getProxyIdsByUserId(Long id) {
+        System.out.println("userdao-getProxyIdsByUserId");
+        return userProxyRepository.findAllByUserAId(id).collect(Collectors.toList()).map(userProxyPos->{
+            System.out.println("userdao-userProxyRepository.findAllByUserAId");
+            List<Long> retIds = new ArrayList<>(userProxyPos.size());
+            LocalDateTime now = LocalDateTime.now();
+            for (UserProxyPo po : userProxyPos) {
+                StringBuilder signature = Common.concatString("-", po.getUserAId().toString(),
+                        po.getUserBId().toString(), po.getBeginDate().toString(), po.getEndDate().toString(), po.getValid().toString());
+                String newSignature = SHA256.getSHA256(signature.toString());
+                UserProxyPo newPo = null;
+
+                if (newSignature.equals(po.getSignature())) {
+                    if (now.isBefore(po.getEndDate()) && now.isAfter(po.getBeginDate())) {
+                        //在有效期内
+                        retIds.add(po.getUserBId());
+                        logger.debug("getProxyIdsByUserId: userAId = " + po.getUserAId() + " userBId = " + po.getUserBId());
+                    } else {
+                        //代理过期了，但标志位依然是有效
+                        newPo = newPo == null ? new UserProxyPo() : newPo;
+                        newPo.setValid((byte) 0);
+                        signature = Common.concatString("-", po.getUserAId().toString(),
+                                po.getUserBId().toString(), po.getBeginDate().toString(), po.getEndDate().toString(), newPo.getValid().toString());
+                        newSignature = SHA256.getSHA256(signature.toString());
+                        newPo.setSignature(newSignature);
+                    }
+                } else {
+                    logger.error("getProxyIdsByUserId: Wrong Signature(auth_user_proxy): id =" + po.getId());
+                }
+
+                if (null != newPo) {
+                    logger.debug("getProxyIdsByUserId: writing back.. po =" + newPo);
+                    po.setValid((byte) 0);
+                    po.setSignature(newSignature);
+                    userProxyRepository.save(newPo);
+                }
+            }
+            return retIds;
+        });
+    }
+
+    private Mono<Integer> loadSingleUserPriv(Long id) {
+        System.out.println("userDao-loadSingleUserPriv");
+        return getRoleIdByUserId(id).map(roleIds->{
+            String key = "u_" + id;
+            Set<String> roleKeys = new HashSet<>(roleIds.size());
+            for (Long roleId : roleIds) {
+                String roleKey = "r_" + roleId;
+                roleKeys.add(roleKey);
+                if (!redisTemplate.hasKey(roleKey)) {
+                    roleDao.loadRolePriv(roleId);
+                }
+                redisTemplate.opsForSet().unionAndStore(roleKeys, key);
+            }
+            redisTemplate.opsForSet().add(key, 0);
+            long randTimeout = Common.addRandomTime(timeout);
+            redisTemplate.expire(key, randTimeout, TimeUnit.SECONDS);
+            return 0;
+        });
+    }
+
+    private Mono<List<Long>> getRoleIdByUserId(Long id) {
+        System.out.println("userdao-getRoleIdByUserId");
+        return userRoleRepository.findAllByUserId(id).collect(Collectors.toList()).map(userRolePoList->{
+            System.out.println("userdao-userRoleRepository.findByUserId");
+            logger.debug("getRoleIdByUserId: userId = " + id + "roleNum = " + userRolePoList.size());
+            List<Long> retIds = new ArrayList<>(userRolePoList.size());
+            for (UserRolePo po : userRolePoList) {
+                StringBuilder signature = Common.concatString("-",
+                        po.getUserId().toString(), po.getRoleId().toString(), po.getCreatorId().toString());
+                String newSignature = SHA256.getSHA256(signature.toString());
+
+
+                if (newSignature.equals(po.getSignature())) {
+                    retIds.add(po.getRoleId());
+                    logger.debug("getRoleIdByUserId: userId = " + po.getUserId() + " roleId = " + po.getRoleId());
+                } else {
+                    logger.error("getRoleIdByUserId: 签名错误(auth_role_privilege): id =" + po.getId());
+                }
+            }
+            return retIds;
+        });
     }
 }
