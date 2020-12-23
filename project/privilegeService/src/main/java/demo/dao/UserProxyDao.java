@@ -2,7 +2,7 @@ package demo.dao;
 
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
-import demo.Repository.UserProxyRepository;
+import demo.repository.UserProxyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
