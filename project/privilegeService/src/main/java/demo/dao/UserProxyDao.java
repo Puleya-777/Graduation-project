@@ -2,15 +2,13 @@ package demo.dao;
 
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
-import demo.Repository.UserProxyRepository;
-import demo.model.po.UserProxyPo;
+import demo.repository.UserProxyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Objects;
 
 /**

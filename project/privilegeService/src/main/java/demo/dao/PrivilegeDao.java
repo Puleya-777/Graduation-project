@@ -5,7 +5,7 @@ import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import demo.Repository.PrivilegeRepository;
+import demo.repository.PrivilegeRepository;
 import demo.model.bo.Privilege;
 import demo.model.po.PrivilegePo;
 import demo.model.vo.PrivilegeVo;

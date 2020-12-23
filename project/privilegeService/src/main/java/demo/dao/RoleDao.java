@@ -1,10 +1,9 @@
 package demo.dao;
 
 import com.example.model.VoObject;
-import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import com.github.pagehelper.PageInfo;
-import demo.Repository.RoleRepository;
+import demo.repository.RoleRepository;
 import demo.model.bo.Role;
 import demo.model.po.RolePo;
 import org.springframework.beans.factory.annotation.Autowired;

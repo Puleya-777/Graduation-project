@@ -6,6 +6,7 @@
     <modules>
         <module>privilegeService</module>
         <module>core</module>
+        <module>goods</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
