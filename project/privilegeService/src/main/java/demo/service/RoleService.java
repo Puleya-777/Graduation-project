@@ -53,14 +53,8 @@ public class RoleService {
     }
 
     public Mono<ReturnObject<VoObject>> insertRole(Role role) {
-        return roleDao.insertRole(role).map(rolePo -> {
-            if (rolePo != null) {
-                role.setId(rolePo.getId());
-                return new ReturnObject<>(role);
-            } else {
-                return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
-            }
-        });
+        return roleDao.insertRole(role);
+
     }
 
     public Mono<ReturnObject> findRolePrivs(Long id) {

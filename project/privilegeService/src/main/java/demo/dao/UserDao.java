@@ -60,8 +60,8 @@ public class UserDao {
     RoleDao roleDao;
 
     public Mono<Boolean> checkUserDid(Long userid, Long departid) {
-        return userRepository.findById(userid).map(userPo -> {
-            if(userPo==null||userPo.getDepartId()!=departid){
+        return userRepository.findById(userid).defaultIfEmpty(new UserPo()).map(userPo -> {
+            if(userPo.getId()==null||userPo.getDepartId()!=departid){
                 return false;
             }else{
                 return true;
@@ -77,13 +77,13 @@ public class UserDao {
      * @author Xianwei Wang
      * */
     public Mono<ReturnObject<VoObject>> revokeRole(Long userid, Long roleid){
-        Mono<UserPo> userPoMono=userRepository.findById(userid);
-        Mono<RolePo> rolePoMono=roleRepository.findById(roleid);
-        Mono<Integer> deleteResult=userRoleRepository.deleteUserRolePoByUserIdAndAndRoleId(userid,roleid);
+        Mono<UserPo> userPoMono=userRepository.findById(userid).defaultIfEmpty(new UserPo());
+        Mono<RolePo> rolePoMono=roleRepository.findById(roleid).defaultIfEmpty(new RolePo());
+        Mono<Integer> deleteResult=userRoleRepository.deleteUserRolePoByUserIdAndAndRoleId(userid,roleid).defaultIfEmpty(-1);
         return Mono.zip(userPoMono,rolePoMono,deleteResult).map(tuple->{
-            if(tuple.getT1()==null||tuple.getT2()==null){
+            if(tuple.getT1().getId()==null||tuple.getT2().getId()==null){
                 return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
-            }else if(tuple.getT3()==0){
+            }else if(tuple.getT3()==-1){
                 return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
             }else{
                 return new ReturnObject<>();
@@ -92,29 +92,32 @@ public class UserDao {
     }
 
     public Mono<Boolean> checkRoleDid(Long roleid, Long departId) {
-        return roleRepository.findById(roleid).map(rolePo -> {
-            if(rolePo==null||rolePo.getDepartId()!=departId){
-                return false;
-            }else{
-                return true;
-            }
+        return roleRepository.findById(roleid).defaultIfEmpty(new RolePo()).map(rolePo -> {
+            return rolePo.getId() != null && rolePo.getDepartId().equals(departId);
         });
     }
 
 
     public Mono<ReturnObject<VoObject>> assignRole(Long createid, Long userid, Long roleid) {
-        Mono<UserPo> userPoMono=userRepository.findById(userid);
-        Mono<UserPo> createMono=userRepository.findById(createid);
-        Mono<RolePo> rolePoMono=roleRepository.findById(roleid);
+        Mono<UserPo> userPoMono=userRepository.findById(userid).defaultIfEmpty(new UserPo());
+        Mono<UserPo> createMono=userRepository.findById(createid).defaultIfEmpty(new UserPo());
+        Mono<RolePo> rolePoMono=roleRepository.findById(roleid).defaultIfEmpty(new RolePo());
 
-        Mono<UserRolePo> userRolePoMono=userRoleRepository.findByUserIdAndRoleId(userid,roleid);
-        return Mono.zip(userPoMono,createMono,rolePoMono,userRolePoMono).map(tuple->{
-            if(tuple.getT1()==null||tuple.getT2()==null||tuple.getT3()==null){
-                return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
-            }else if(userRolePoMono==null){
+        Mono<UserRolePo> userRolePoMono=userRoleRepository.findByUserIdAndRoleId(userid,roleid).defaultIfEmpty(new UserRolePo());
+
+        logger.info("enter it");
+        return Mono.zip(userPoMono,createMono,rolePoMono,userRolePoMono).flatMap(tuple->{
+            if(tuple.getT1().getId()==null||tuple.getT2().getId()==null||tuple.getT3().getId()==null){
+                logger.info("enter one");
+
+                return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+            }else if(tuple.getT4().getId()!=null){
+                logger.info("enter two");
+
                 logger.warn("assignRole: 该用户已拥有该角色 userid=" + userid + "roleid=" + roleid);
-                return new ReturnObject<>(ResponseCode.USER_ROLE_REGISTERED);
+                return Mono.just(new ReturnObject<>(ResponseCode.USER_ROLE_REGISTERED));
             }else{
+                logger.info("enter three");
                 UserRolePo userRolePo = new UserRolePo();
                 userRolePo.setUserId(userid);
                 userRolePo.setRoleId(roleid);
@@ -123,8 +126,13 @@ public class UserDao {
                 UserRole userRole = new UserRole(userRolePo, new User(tuple.getT1()), new Role(tuple.getT3()), new User(tuple.getT2()));
                 userRolePo.setSignature(userRole.getCacuSignature());
 
-                userRoleRepository.save(userRolePo);
-                return new ReturnObject<>(userRole);
+//                userRoleRepository.save(userRolePo);
+                return userRoleRepository.save(userRolePo)
+                        .map(userRolePoRet->{
+                            userRole.setId(userRolePoRet.getId());
+                            return userRole;
+                        }).map(ReturnObject::new);
+//                return Mono.just(new ReturnObject<>(userRole));
             }
         });
     }

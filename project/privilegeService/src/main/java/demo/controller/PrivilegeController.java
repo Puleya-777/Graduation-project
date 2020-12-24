@@ -7,6 +7,7 @@ import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ResponseUtil;
 import com.example.util.ReturnObject;
+import demo.model.po.UserPo;
 import demo.repository.*;
 import demo.model.bo.Role;
 import demo.model.bo.User;
@@ -29,6 +30,7 @@ import reactor.core.publisher.Mono;
 import springfox.documentation.annotations.ApiIgnore;
 import demo.util.IpUtil;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
@@ -73,7 +75,7 @@ public class PrivilegeController {
         this.rolePrivilegeRepository = rolePrivilegeRepository;
     }
 
-    @Autowired
+    @Resource
     private HttpServletResponse httpServletResponse;
 
     /***1
@@ -95,9 +97,9 @@ public class PrivilegeController {
     })
     @Audit
     @DeleteMapping("/shops/{did}/adminusers/{userid}/roles/{roleid}")
-    public Mono revokeRole(@PathVariable Long did, @PathVariable Long userid, @PathVariable Long roleid) {
-            return userRoleRepository.deleteUserRolePoByUserIdAndAndRoleId(userid,roleid);
-       // return userService.revokeRole(userid,roleid,did).map(Common::decorateReturnObject);
+    public Mono<Object> revokeRole(@PathVariable Long did, @PathVariable Long userid, @PathVariable Long roleid) {
+//            return userRoleRepository.deleteUserRolePoByUserIdAndAndRoleId(userid,roleid);
+        return userService.revokeRole(userid,roleid,did).map(Common::decorateReturnObject);
     }
 
     /***2
@@ -119,10 +121,9 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
             @ApiResponse(code = 504, message = "操作id不存在")
     })
-//    @Audit
+    @Audit
     @PostMapping("/shops/{did}/adminusers/{userid}/roles/{roleid}")
     public Mono<Object> assignRole(@LoginUser Long createid, @PathVariable Long did, @PathVariable Long userid, @PathVariable Long roleid) {
-
         return userService.assignRole(createid, userid, roleid, did)
                 .map(returnObject->{
                     if(returnObject.getCode()== ResponseCode.OK){
@@ -328,11 +329,6 @@ public class PrivilegeController {
             }
         });
 
-//        Mono<Object> userPoMono = userRepository.findById(id).map(userPo ->
-//                userPo == null ? new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST) : new ReturnObject<>(new User(userPo))
-//        );
-//
-//        return userPoMono;
     }
 
 
@@ -401,13 +397,6 @@ public class PrivilegeController {
             return Mono.just(Common.getNullRetObj(new ReturnObject<>(ResponseCode.FIELD_NOTVALID, String.format("部门id不匹配：" + did)), httpServletResponse));
         }
 
-//        if(did.equals(departId)){
-//            ReturnObject<PageInfo<VoObject>> returnObject =  roleService.selectAllRoles(departId, page, pageSize);
-//            return Common.getPageRetObject(returnObject);
-//        }
-//        else{
-//            return Common.getNullRetObj(new ReturnObject<>(ResponseCode.FIELD_NOTVALID, String.format("部门id不匹配：" + did)), httpServletResponse);
-//        }
     }
 
     /**
@@ -418,8 +407,6 @@ public class PrivilegeController {
      * @param bindingResult 校验错误
      * @param userId        当前用户id
      * @return Object 角色返回视图
-     * createdBy 王纬策 2020/11/04 13:57
-     * modifiedBy 王纬策 2020/11/7 19:20
      */
     @ApiOperation(value = "新增角色", produces = "application/json")
     @ApiImplicitParams({
@@ -435,13 +422,14 @@ public class PrivilegeController {
     public Mono<Object> insertRole(@Validated @RequestBody RoleVo vo, BindingResult bindingResult,
                              @LoginUser @ApiIgnore @RequestParam(required = false) Long userId,
                              @Depart @ApiIgnore @RequestParam(required = false) Long departId) {
+
         logger.debug("insert role by userId:" + userId);
         //校验前端数据
-        Object returnObject = Common.processFieldErrors(bindingResult, httpServletResponse);
-        if (null != returnObject) {
-            logger.debug("validate fail");
-            return Mono.just(returnObject);
-        }
+//        Object returnObject = Common.processFieldErrors(bindingResult, httpServletResponse);
+//        if (null != returnObject) {
+//            logger.debug("validate fail");
+//            return Mono.just(returnObject);
+//        }
 
         Role role = vo.createRole();
         role.setCreatorId(userId);
@@ -449,7 +437,7 @@ public class PrivilegeController {
         role.setGmtCreate(LocalDateTime.now());
         return roleService.insertRole(role).map(retObject->{
             if (retObject.getData() != null) {
-                httpServletResponse.setStatus(HttpStatus.CREATED.value());
+//                httpServletResponse.setStatus(HttpStatus.CREATED.value());
                 return Common.getRetObject(retObject);
             } else {
                 return Common.getNullRetObj(new ReturnObject<>(retObject.getCode(), retObject.getErrmsg()), httpServletResponse);
@@ -458,14 +446,8 @@ public class PrivilegeController {
     }
 
         @GetMapping("/test")
-    public Mono<Long> test(){
-        return Flux.just("nn1","nn2").map(it->{
-            if(it.equals("nn1")){
-                return null;
-            }else{
-                return it;
-            }
-        }).count();
+    public void test(){
+        System.out.println(new UserPo());
     }
 
 

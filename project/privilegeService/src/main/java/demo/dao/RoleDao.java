@@ -61,8 +61,24 @@ public class RoleDao {
                 .map(ReturnObject::new);
     }
 
-    public Mono<RolePo> insertRole(Role role) {
-        return roleRepository.save(role.gotRolePo());
+    public Mono<ReturnObject<VoObject>> insertRole(Role role) {
+
+        return roleRepository.findByName(role.getName()).defaultIfEmpty(new RolePo())
+                .flatMap(rolePo -> {
+                    if(rolePo.getId()!=null){
+                        return Mono.just(new ReturnObject<>(ResponseCode.ROLE_REGISTERED));
+                    }else{
+                        return roleRepository.save(role.gotRolePo()).map(savePo -> {
+                            if (savePo != null) {
+                                role.setId(savePo.getId());
+                                return new ReturnObject<>(role);
+                            } else {
+                                return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
+                            }
+                        });
+                    }
+                });
+
     }
 
     public void loadRolePriv(Long id) {
