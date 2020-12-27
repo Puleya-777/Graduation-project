@@ -166,6 +166,35 @@ public class UserService {
      * huiyu
      */
 
+    public Mono<ReturnObject> checkMobile(UserPo userPo,UserVo userVo){
+        return Mono.just(userPo).flatMap(it->{
+            if(!userPo.getMobile().equals(AES.encrypt(userVo.getMobile(), User.AESPASS))){
+                return userRepository.countAllByMobile(AES.encrypt(userVo.getMobile(), User.AESPASS)).map(count->{
+                   if(count==0){
+                       return new ReturnObject<>(ResponseCode.OK);
+                   }else{
+                       return new ReturnObject(ResponseCode.MOBILE_REGISTERED);
+                   }
+                });
+            }
+            return Mono.just(new ReturnObject<>(ResponseCode.OK));
+        });
+    }
+    public Mono<ReturnObject> checkEmail(UserPo userPo,UserVo userVo){
+        return Mono.just(userPo).flatMap(it->{
+            if(!userPo.getEmail().equals(AES.encrypt(userVo.getEmail(), User.AESPASS))){
+                return userRepository.countAllByEmail(AES.encrypt(userVo.getEmail(), User.AESPASS)).map(cout->{
+                    if(cout==0){
+                        return new ReturnObject<>(ResponseCode.OK);
+                    }else{
+                        return new ReturnObject(ResponseCode.EMAIL_REGISTERED);
+                    }
+                });
+            }
+            return Mono.just(new ReturnObject<>(ResponseCode.OK));
+        });
+    }
+
     @Transactional
     public Mono<ReturnObject> modifyUserInfo(Long id, UserVo userVo) {
         // 查询密码等资料以计算新签名
@@ -175,31 +204,39 @@ public class UserService {
                logger.info("用户不存在或已被删除：id = " + id);
                return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
            }else{
-               // 构造 User 对象以计算签名
-               User user = new User(it);
-               UserPo po = user.createUpdatePo(userVo,it);
-               // 将更改的联系方式 (如发生变化) 的已验证字段改为 false
-               if (userVo.getEmail() != null && !userVo.getEmail().equals(user.getEmail())) {
-                   po.setEmailVerified((byte) 0);
-               }
-               if (userVo.getMobile() != null && !userVo.getMobile().equals(user.getMobile())) {
-                   po.setMobileVerified((byte) 0);
-               }
+               //校验邮箱与手机
+               return Mono.zip(checkEmail(it,userVo),checkMobile(it,userVo)).flatMap(tuple->{
+                   if(tuple.getT1().getCode()==ResponseCode.OK&&tuple.getT2().getCode()==ResponseCode.OK){
 
-               /**
-                * 此处save需作异常处理
-                */
-               return userRepository.save(po).flatMap(userPo -> {
-                   logger.info(userPo.toString());
-                   // 检查更新有否成功
-                   if (userPo==null) {
-                       logger.info("用户不存在或已被删除：id = " + id);
-                       return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
-                   } else {
-                       logger.info("用户 id = " + id + " 的资料已更新");
-                       return Mono.just(new ReturnObject<>());
-                   }
-               });
+                       // 构造 User 对象以计算签名
+                       User user = new User(it);
+                       UserPo po = user.createUpdatePo(userVo,it);
+                       // 将更改的联系方式 (如发生变化) 的已验证字段改为 false
+                       if (userVo.getEmail() != null && !userVo.getEmail().equals(user.getEmail())) {
+                           po.setEmailVerified((byte) 0);
+                       }else{
+                           po.setEmailVerified((byte) 1);
+                       }
+                       if (userVo.getMobile() != null && !userVo.getMobile().equals(user.getMobile())) {
+                           po.setMobileVerified((byte) 0);
+                       }else{
+                           po.setMobileVerified((byte) 1);
+                       }
+
+                       /**
+                        * 此处save需作异常处理
+                        */
+                       return userRepository.save(po).flatMap(userPo -> {
+                           logger.info(userPo.toString());
+                           // 检查更新有否成功
+                           if (userPo==null) {
+                               logger.info("用户不存在或已被删除：id = " + id);
+                               return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+                           } else {
+                               logger.info("用户 id = " + id + " 的资料已更新");
+                               return Mono.just(new ReturnObject<>());
+                           }
+                       });
 //               // 更新数据库
 //               ReturnObject<Object> retObj;
 //               Mono<UserPo> ret;
@@ -235,6 +272,17 @@ public class UserService {
 //                   retObj = new ReturnObject<>();
 //               }
 //               return retObj;
+                   }
+                   if(tuple.getT1().getCode()!=ResponseCode.OK){
+                       return Mono.just(tuple.getT1());
+                   }
+                   if(tuple.getT2().getCode()!=ResponseCode.OK){
+                       return Mono.just(tuple.getT2());
+                   }
+                   return Mono.just(new ReturnObject<>());
+
+               });
+
            }
         });
 

@@ -3,6 +3,10 @@ package demo.controller;
 import com.example.annotation.Audit;
 import com.example.annotation.Depart;
 import com.example.annotation.LoginUser;
+//import demo.annotation.Audit;
+//import demo.annotation.Depart;
+//import demo.annotation.LoginUser;
+
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ResponseUtil;
@@ -467,7 +471,7 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
     })
     @Audit
-    @DeleteMapping("proxie/{id}")
+    @DeleteMapping("proxies/{id}")
     public Mono removeUserProxy(@PathVariable Long id, @LoginUser @ApiIgnore Long userId) {
         logger.info("removeUserProxy: id = " + id);
         return userProxyService.removeUserProxy(id, userId);
@@ -483,9 +487,9 @@ public class PrivilegeController {
     @ApiResponses({
             @ApiResponse(code = 0, message = "成功"),
     })
-    @Audit
+    //@Audit
     @GetMapping("shops/{did}/proxies")
-    public Object listProxies(Long aId, Long bId,@PathVariable Long did) {
+    public Mono listProxies(Long aId, Long bId,@PathVariable Long did) {
         logger.debug("listProxies: aId = " + aId + " bId = " + bId);
         return userProxyService.listProxies(aId, bId,did);
     }
@@ -527,7 +531,7 @@ public class PrivilegeController {
         if(result.hasErrors()){
             return Mono.just(Common.processFieldErrors(result,httpServletResponse));
         }
-        return newUserService.register(vo).map(ret->{
+        return newUserService.registerCheck(vo).map(ret->{
             if(ret.getCode()==ResponseCode.OK){
                 return Mono.just(ResponseUtil.ok(ret.getData()));
             }
@@ -670,8 +674,8 @@ public class PrivilegeController {
             @ApiResponse(code = 0, message = "成功"),
     })
     @Audit
-    @DeleteMapping("roleprivileges/{id}")
-    public Mono delRolePriv(@PathVariable Long id){
+    @DeleteMapping("shops/{did}/roleprivileges/{id}")
+    public Mono delRolePriv(@PathVariable Long did,@PathVariable Long id){
         logger.info("delRolePriv: id = "+ id);
         /**
          * 这边很奇怪，默认return fail
@@ -742,8 +746,8 @@ public class PrivilegeController {
      * 获取新用户列表(pass?使用Flux,需前后端联调)
      */
     @GetMapping(value = "shops/{did}/adminusers/allnew",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
-    public Flux getNewUser(@PathVariable Long did){
-        return newUserService.getAllNewUser(did);
+    public Mono getNewUser(@PathVariable Long did){
+        return newUserService.getAllNewUser(did).collectList().map(it-> new ReturnObject<>(it));
     }
 
     @ApiOperation(value = "登录")

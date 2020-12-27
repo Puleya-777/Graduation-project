@@ -59,10 +59,18 @@ public class UserProxyDao {
         }).defaultIfEmpty(Mono.just(new ReturnObject(ResponseCode.RESOURCE_ID_NOTEXIST)));
     }
 
-    public ReturnObject listProxies(Long aId, Long bId,Long did) {
-
-        //r2dbc与jpa不兼容
-        return new ReturnObject<>();
+    public Mono listProxies(Long aId, Long bId,Long did) {
+        if(aId==null&&bId==null){
+            return userProxyRepository.findAllByDepartId(did).collectList();
+        }else{
+            if(aId==null){
+                return userProxyRepository.findAllByUserBId(bId).collectList();
+            }else if(bId==null){
+                return userProxyRepository.findAllByUserAId(aId).collectList();
+            }else{
+                return userProxyRepository.findAllByUserAIdAndUserBId(aId,bId).collectList();
+            }
+        }
     }
 
     public Mono removeAllProxies(Long id,Long did) {

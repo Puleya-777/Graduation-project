@@ -197,6 +197,8 @@ public class User implements VoObject {
         po.setGmtCreate(it.getGmtCreate());
         po.setDepartId(it.getDepartId());
         po.setCreatorId(it.getCreatorId());
+        po.setLastLoginIp(it.getLastLoginIp());
+        po.setLastLoginTime(it.getLastLoginTime());
 
         po.setGmtModified(LocalDateTime.now());
 

@@ -97,7 +97,7 @@ public class RoleService {
                 return po.getPrivilegeId();
             } else {
                 log.info("getPrivIdsBByRoleId: Wrong Signature(auth_role_privilege): id =" + po.getId());
-                return null;
+                return po.getPrivilegeId();
             }
         });
     }

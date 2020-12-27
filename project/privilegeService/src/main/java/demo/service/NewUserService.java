@@ -46,13 +46,63 @@ public class NewUserService {
     private boolean reinitialize=true;
 
 
-    @Transactional
-    public Mono<ReturnObject> register(NewUserVo vo) {
+    private Mono<ReturnObject> checkPo(NewUserPo newUserPo){
+        log.info("开始检验");
+        return Mono.zip(newUserRepository.countAllByUserName(newUserPo.getUserName()),
+                newUserRepository.countAllByEmail(newUserPo.getEmail()),
+                newUserRepository.countAllByMobile(newUserPo.getMobile()),
+                userRepository.countAllByUserName(newUserPo.getUserName()),
+                userRepository.countAllByEmail(newUserPo.getEmail()),
+                userRepository.countAllByMobile(newUserPo.getMobile())).map(tuple->{
+                    log.info("检验中");
+                 if(tuple.getT1()!=0) {
+                     return new ReturnObject(ResponseCode.USER_NAME_REGISTERED);
+                 }
+                 if(tuple.getT2()!=0){
+                     return new ReturnObject(ResponseCode.EMAIL_REGISTERED);
+                 }
+                 if(tuple.getT3()!=0){
+                     return new ReturnObject(ResponseCode.MOBILE_REGISTERED);
+                 }
+                 if(tuple.getT4()!=0) {
+                    return new ReturnObject(ResponseCode.USER_NAME_REGISTERED);
+                }
+                if(tuple.getT5()!=0){
+                    return new ReturnObject(ResponseCode.EMAIL_REGISTERED);
+                }
+                if(tuple.getT6()!=0){
+                    return new ReturnObject(ResponseCode.MOBILE_REGISTERED);
+                }
+                log.info("检验无重复");
+                 return new ReturnObject(ResponseCode.OK);
+        });
+    }
+
+    public Mono<ReturnObject> registerCheck(NewUserVo vo){
         NewUserPo userPo=new NewUserPo();
-        ReturnObject returnObject;
         userPo.setEmail(AES.encrypt(vo.getEmail(), User.AESPASS));
         userPo.setMobile(AES.encrypt(vo.getMobile(),User.AESPASS));
         userPo.setUserName(vo.getUserName());
+        return checkPo(userPo).flatMap(it->{
+            log.info("检验成功");
+            if(it.getCode()==ResponseCode.OK) {
+                log.info("检验成功并开始注册用户");
+                return register(vo);
+            }else{
+                return Mono.just(it);
+            }
+        });
+    }
+
+    @Transactional
+    public Mono<ReturnObject> register(NewUserVo vo) {
+
+
+        NewUserPo userPo=new NewUserPo();
+        userPo.setEmail(AES.encrypt(vo.getEmail(), User.AESPASS));
+        userPo.setMobile(AES.encrypt(vo.getMobile(),User.AESPASS));
+        userPo.setUserName(vo.getUserName());
+
         /**
          * 未配置redis，先屏蔽掉以下代码
          */
@@ -150,47 +200,8 @@ public class NewUserService {
         }
     }
 
-    /**
-     * 检查用户名重复
-     * @param userName 需要检查的用户名
-     * @return boolean
-     */
-    public boolean isUserNameExist(String userName){
-        log.debug("is checking userName in user table");
-        if(userRepository.findByUserName(userName).block()!=null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
-    /**
-     * 检查邮箱重复
-     * @param email
-     * @return boolean
-     */
-    public boolean isEmailExist(String email){
-        log.debug("is checking email in user table");
-        if(userRepository.findByEmail(email).block()!=null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
-    /**
-     * 检查电话重复
-     * @param mobile 电话号码
-     * @return boolean
-     */
-    public boolean isMobileExist(String mobile){
-        log.debug("is checking mobile in user table");
-        if(userRepository.findByMobile(mobile).block()!=null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
     @Transactional
     public Mono approveUser(boolean approve, Long id) {

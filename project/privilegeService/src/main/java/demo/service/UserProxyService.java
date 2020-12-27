@@ -22,8 +22,8 @@ public class UserProxyService {
         return userProxyDao.removeUserProxy(id, userId);
     }
 
-    public ReturnObject listProxies(Long aId, Long bId,Long did) {
-        return userProxyDao.listProxies(aId, bId,did);
+    public Mono listProxies(Long aId, Long bId,Long did) {
+        return userProxyDao.listProxies(aId, bId,did).flatMap(it-> Mono.just(new ReturnObject(it)));
     }
 
     public Mono removeAllProxies(Long id,Long did) {
