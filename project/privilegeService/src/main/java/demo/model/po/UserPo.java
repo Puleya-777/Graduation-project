@@ -127,7 +127,7 @@ public class UserPo {
      *
      * @mbg.generated
      */
-    private Byte state;
+    private Integer state;
 
     /**
      *
@@ -470,7 +470,7 @@ public class UserPo {
      *
      * @mbg.generated
      */
-    public Byte getState() {
+    public Integer getState() {
         return state;
     }
 
@@ -482,7 +482,7 @@ public class UserPo {
      *
      * @mbg.generated
      */
-    public void setState(Byte state) {
+    public void setState(Integer state) {
         this.state = state;
     }
 

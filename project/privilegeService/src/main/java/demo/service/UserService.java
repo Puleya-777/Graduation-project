@@ -364,7 +364,7 @@ public class UserService {
     public Mono<ReturnObject> login(String userName, String password, String ipAddr)
     {
         System.out.println("userservice-login");
-        return userDao.getUserByName((userName)).map(retObj->{
+        return userDao.getUserByName(userName).map(retObj->{
             System.out.println("service-userDao.getUserByName-1");
             if (retObj.getCode() != ResponseCode.OK){
                 return retObj;
@@ -458,16 +458,16 @@ public class UserService {
                 while (newBanIndex == bannIndex &&
                         !redisTemplate.opsForValue().setIfAbsent("banIndexLocker","nouse", lockerExpireTime, TimeUnit.SECONDS)){
                     //如果BanIndex没被其他线程改变，且锁获取不到
-                    try {
-                        Thread.sleep(10);
+//                    try {
+//                        Thread.sleep(10);
                         //重新获得新的BanIndex
                         newBanIndex = (Long) redisTemplate.opsForValue().get("banIndex");
-                    }catch (InterruptedException e){
-                        logger.error("banJwt: 锁等待被打断");
-                    }
-                    catch (IllegalArgumentException e){
-
-                    }
+//                    }catch (InterruptedException e){
+//                        logger.error("banJwt: 锁等待被打断");
+//                    }
+//                    catch (IllegalArgumentException e){
+//
+//                    }
                 }
                 if (newBanIndex == bannIndex) {
                     //切换ban set
@@ -489,5 +489,26 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public Mono<ReturnObject> deleteUser(Long id) {
+        // 注：逻辑删除
+        return userDao.changeUserState(id, User.State.DELETE);
+    }
+
+    @Transactional
+    public Mono<ReturnObject> forbidUser(Long id) {
+        return userDao.changeUserState(id, User.State.FORBID);
+    }
+
+    @Transactional
+    public Mono<ReturnObject> releaseUser(Long id) {
+        return userDao.changeUserState(id, User.State.NORM);
+    }
+
+    public Mono<ReturnObject<Boolean>> Logout(Long userId)
+    {
+        redisTemplate.delete("up_" + userId);
+        return Mono.just(new ReturnObject<>(true));
+    }
 
 }

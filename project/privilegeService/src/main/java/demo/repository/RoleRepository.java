@@ -11,4 +11,8 @@ public interface RoleRepository extends ReactiveCrudRepository<RolePo,Long> {
 
     Mono<RolePo> findByName(String name);
 
+    Mono<RolePo> findByIdAndDepartId(Long id,Long did);
+
+    Mono<Integer> deleteByIdAndDepartId(Long id,Long did);
+
 }

@@ -750,7 +750,7 @@ public class PrivilegeController {
         return newUserService.getAllNewUser(did).collectList().map(it-> new ReturnObject<>(it));
     }
 
-    @ApiOperation(value = "登录")
+    @ApiOperation(value = "登录")//k
     @PostMapping("/privileges/login")
     public Mono login(@Validated @RequestBody LoginVo loginVo, BindingResult bindingResult
             , HttpServletResponse httpServletResponse,HttpServletRequest httpServletRequest){
@@ -771,6 +771,216 @@ public class PrivilegeController {
                 return ResponseUtil.ok(jwt.getData());
             }
         });
+    }
+
+    //13
+    @ApiOperation(value = "删除角色", produces = "application/json")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "Token", required = true),
+            @ApiImplicitParam(paramType = "path", dataType = "int", name = "did", value = "部门id", required = true),
+            @ApiImplicitParam(paramType = "path", dataType = "int", name = "id", value = "角色id", required = true)
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @com.example.annotation.Audit
+    @DeleteMapping("/shops/{did}/roles/{id}")
+    public Mono deleteRole(@PathVariable("did") Long did, @PathVariable("id") Long id,
+                           @com.example.annotation.LoginUser @ApiIgnore @RequestParam(required = false) Long userId,
+                           @com.example.annotation.Depart @ApiIgnore @RequestParam(required = false) Long departId){
+        logger.debug("delete role");
+        if(did.equals(departId)){
+            System.out.println("controller-deleteRole");
+            return roleService.deleteRole(departId, id).map(Common::decorateReturnObject);
+        }else{
+            return Mono.just(Common.getNullRetObj(new ReturnObject<>(ResponseCode.FIELD_NOTVALID, String.format("部门id不匹配：" + did)), httpServletResponse));
+        }
+    }
+
+    //14
+    @ApiOperation(value = "修改角色信息", produces = "application/json")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "header", dataType = "String", name = "authorization", value = "Token", required = true),
+            @ApiImplicitParam(paramType = "path", dataType = "int", name = "did", value = "部门id", required = true),
+            @ApiImplicitParam(paramType = "path", dataType = "int", name = "id", value = "角色id", required = true),
+            @ApiImplicitParam(paramType = "body", dataType = "RoleVo", name = "vo", value = "可修改的用户信息", required = true)
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = 736, message = "角色名已存在"),
+    })
+    @com.example.annotation.Audit
+    @PutMapping("/shops/{did}/roles/{id}")
+    public Mono updateRole(@PathVariable("did") Long did, @PathVariable("id") Long id, @Validated @RequestBody RoleVo vo, BindingResult bindingResult,
+                           @com.example.annotation.LoginUser @ApiIgnore @RequestParam(required = false) Long userId,
+                           @com.example.annotation.Depart @ApiIgnore @RequestParam(required = false) Long departId) {
+        logger.debug("update role by userId:" + userId);
+        //校验前端数据
+        Object returnObject = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if (null != returnObject) {
+            return Mono.just(returnObject);
+        }
+        if(did.equals(departId)){
+            Role role = vo.createRole();
+            role.setId(id);
+            role.setDepartId(departId);
+            role.setCreatorId(userId);
+            role.setGmtModified(LocalDateTime.now());
+            System.out.println("controller-14");
+            return roleService.updateRole(role).map(retObject->{
+                if(retObject.getData()!= null)
+                {
+                    return retObject;
+                }else{
+                    return Common.getNullRetObj(new ReturnObject<>(retObject.getCode(), retObject.getErrmsg()), httpServletResponse);
+                }
+            });
+        }
+        else {
+            return Mono.just(Common.getNullRetObj(new ReturnObject<>(ResponseCode.FIELD_NOTVALID, String.format("部门id不匹配：" + did)), httpServletResponse));
+        }
+    }
+
+    //15
+    @ApiOperation(value = "修改任意用户信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="Integer", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 732, message = "邮箱已被注册"),
+            @ApiResponse(code = 733, message = "电话已被注册"),
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @com.example.annotation.Audit // 需要认证
+    @PutMapping("adminusers/{id}")
+    public Mono modifyUserInfo(@PathVariable Long id, @Validated @RequestBody UserVo vo, BindingResult bindingResult) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("modifyUserInfo: id = "+ id +" vo = " + vo);
+        }
+        // 校验前端数据
+        Object returnObject = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if (returnObject != null) {
+            logger.info("incorrect data received while modifyUserInfo id = " + id);
+            return Mono.just(returnObject);
+        }
+        System.out.println("controller-15");
+        return userService.modifyUserInfo(id,vo).map(Common::decorateReturnObject);
+    }
+
+    //16
+    @ApiOperation(value = "删除任意用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="Integer", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @com.example.annotation.Audit // 需要认证
+    @DeleteMapping("/adminusers/{id}")
+    public Mono deleteUser(@PathVariable Long id) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("deleteUser: id = "+ id);
+        }
+        System.out.println("controller-16");
+        return userService.deleteUser(id).map(Common::decorateReturnObject);
+    }
+
+    //17
+    @ApiOperation(value = "禁止用户登录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="Integer", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @com.example.annotation.Audit // 需要认证
+    @PutMapping("adminusers/{id}/forbid")
+    public Mono forbidUser(@PathVariable Long id) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("forbidUser: id = "+ id);
+        }
+        System.out.println("controller-17");
+        return userService.forbidUser(id).map(Common::decorateReturnObject);
+    }
+
+    //18
+    @ApiOperation(value = "恢复用户")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name="authorization", value="Token", required = true, dataType="String", paramType="header"),
+            @ApiImplicitParam(name="id", required = true, dataType="Integer", paramType="path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @com.example.annotation.Audit // 需要认证
+    @PutMapping("adminusers/{id}/release")
+    public Mono releaseUser(@PathVariable Long id) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("releaseUser: id = "+ id);
+        }
+        System.out.println("controller-18");
+        return userService.releaseUser(id).map(Common::decorateReturnObject);
+    }
+
+    //20 k
+    @ApiOperation(value = "注销")
+    @com.example.annotation.Audit
+    @GetMapping("privileges/logout")
+    public Mono logout(@com.example.annotation.LoginUser Long userId){
+        logger.debug("logout: userId = "+userId);
+        System.out.println("controller-20");
+        return userService.Logout(userId).map(success->{
+            if (success.getData() == null){
+                return ResponseUtil.fail(success.getCode(), success.getErrmsg());
+            }else {
+                return ResponseUtil.ok();
+            }
+        });
+    }
+
+    //22
+    @ApiOperation(value = "设置用户代理关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "id", required = true, dataType = "Long", paramType = "path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @com.example.annotation.Audit
+    @PostMapping("users/{id}/proxy")
+    public Mono usersProxy(@com.example.annotation.LoginUser @ApiIgnore  Long userId, @com.example.annotation.Depart @ApiIgnore Long departid, @PathVariable Long id, @Validated @RequestBody UserProxyVo vo, BindingResult bindingresult) {
+        logger.debug("usersProxy: id = " + id + " vo" + vo);
+        Object returnObject = Common.processFieldErrors(bindingresult, httpServletResponse);
+        if (null != returnObject) {
+            logger.info("validate fail");
+            return Mono.just(returnObject);
+        }
+        System.out.println("controller-22");
+        return userProxyService.usersProxy(userId, id, vo,departid);
+    }
+
+    @ApiOperation(value = "管理员设置用户代理关系")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "authorization", value = "Token", required = true, dataType = "String", paramType = "header"),
+            @ApiImplicitParam(name = "aid", required = true, dataType = "Long", paramType = "path"),
+            @ApiImplicitParam(name = "bid", required = true, dataType = "Long", paramType = "path")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+    })
+    @PostMapping("ausers/{aid}/busers/{bid}")
+    public Mono aUsersProxy(@PathVariable Long aid, @PathVariable Long bid,@Validated @RequestBody UserProxyVo vo, BindingResult bindingresult,@com.example.annotation.Depart @ApiIgnore Long departid) {
+        Object returnObject = Common.processFieldErrors(bindingresult, httpServletResponse);
+        if (null != returnObject) {
+            logger.info("validate fail");
+            return Mono.just(returnObject);
+        }
+        System.out.println("controller-23");
+        return userProxyService.aUsersProxy(aid, bid, vo,departid);
     }
 
 }
