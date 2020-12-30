@@ -148,9 +148,9 @@ public class PrivilegeController {
 
     })
     @Audit
-    @GetMapping(value = "/adminusers/self/roles/{id}")
+    @GetMapping(value = "/adminusers/self/roles")
     public @ResponseBody
-    Mono<Object> getUserSelfRole(@PathVariable Long id) {
+    Mono<Object> getUserSelfRole(@LoginUser Long id) {
         return userService.getSelfUserRoles(id).map(Common::getListRetObject);
     }
 

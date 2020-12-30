@@ -1,6 +1,8 @@
 package com.example.model.po;
 
+import com.example.model.vo.SkuVo;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -8,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Table("goods_sku")
 @Data
+@NoArgsConstructor
 public class SkuPo {
 
     @Id
@@ -15,7 +18,7 @@ public class SkuPo {
 
     Long goodsSpuId;
 
-    String SkuSn;
+    String skuSn;
 
     String name;
 
@@ -27,7 +30,7 @@ public class SkuPo {
 
     String imageUrl;
 
-    Integer State;
+    Integer state;
 
     Long inventory;
 
@@ -38,5 +41,21 @@ public class SkuPo {
     LocalDateTime gmtCreate;
 
     LocalDateTime gmtModified;
+
+    public SkuPo(SkuVo skuVo){
+        skuSn=skuVo.getSn();
+        name=skuVo.getName();
+        originalPrice=skuVo.getOriginalPrice();
+        configuration=skuVo.getConfiguration();
+        weight=skuVo.getWeight();
+        imageUrl=skuVo.getImageUrl();
+
+        state=0;
+        inventory=skuVo.getInventory();
+        detail=skuVo.getDetail();
+
+        disabled=true;
+
+    }
 
 }

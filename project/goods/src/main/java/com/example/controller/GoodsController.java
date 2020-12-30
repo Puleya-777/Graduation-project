@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import com.example.annotation.LoginUser;
+import com.example.model.po.SkuPo;
 import com.example.model.vo.*;
 import com.example.service.GoodsService;
 import com.example.util.Common;
@@ -8,6 +9,7 @@ import com.example.util.ResponseCode;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
@@ -72,7 +74,7 @@ public class GoodsController {
      * @param userId
      * @param shopId
      * @param id
-     * @param body
+     * @param skuVo
      * @return
      */
     @ApiResponses({
@@ -80,9 +82,12 @@ public class GoodsController {
             @ApiResponse(code = 901, message = "商品规格重复")
     })
     @PostMapping("/shops/{shopId}/spus/{id}/skus")
-    public Mono<Object> addSkuToSpu(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Integer id,
-                                    @RequestBody String body){
-        return null;
+    public Mono<Object> addSkuToSpu(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id,
+                                    @RequestBody SkuVo skuVo){
+        SkuPo skuPo=new SkuPo(skuVo);
+        skuPo.setGoodsSpuId(id);
+        return goodsService.addSkuToSpu(shopId,id,skuPo).map(Common::getRetObject);
+
     }
 
     /**
@@ -94,9 +99,9 @@ public class GoodsController {
      * @return
      */
     @PostMapping("/shops/{shopId}/skus/{id}/uploadImg")
-    public Mono<Object> updatePicToSku(@LoginUser Long userId, @RequestParam Integer shopId, @RequestParam Integer skuId,
-                                       File img){
-        return null;
+    public Mono<Object> updatePicToSku(@LoginUser Long userId, @RequestParam Integer shopId, @RequestParam Long skuId,
+                                       @RequestParam MultipartFile img){
+        return goodsService.updatePicToSku(skuId,img).map(Common::getRetObject);
     }
 
     /**
@@ -108,7 +113,7 @@ public class GoodsController {
      */
     @DeleteMapping("/shops/{shopId}/skus/{id}")
     public Mono<Object> deleteSku(@LoginUser Long userId,@PathVariable Integer skuId,@PathVariable Integer shopId){
-        return null;
+        return goodsService.deleteSku(skuId).map(Common::getRetObject);
     }
 
     /**

@@ -1,5 +1,8 @@
 package com.example.model.vo;
 
+import com.example.model.VoObject;
+import com.example.model.po.SkuPo;
+
 public class SimpleRetSku {
 
     Long id;
@@ -10,12 +13,23 @@ public class SimpleRetSku {
 
     String imageUrl;
 
-    Integer inventory;
+    Long inventory;
 
-    Integer originalPrice;
+    Float originalPrice;
 
-    Integer price;
+    Float price;
 
     Boolean disable;
+
+    public SimpleRetSku(SkuPo skuPo){
+        id=skuPo.getId();
+        name=skuPo.getName();
+        skuSn=skuPo.getSkuSn();
+        imageUrl=skuPo.getImageUrl();
+        inventory=skuPo.getInventory();
+        originalPrice=skuPo.getOriginalPrice();
+        price=originalPrice;
+        disable=skuPo.getDisabled();
+    }
 
 }
