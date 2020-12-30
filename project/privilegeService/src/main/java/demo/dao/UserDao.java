@@ -4,8 +4,10 @@ import com.example.model.VoObject;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import com.example.util.encript.AES;
 import com.example.util.encript.SHA256;
 import com.github.pagehelper.PageInfo;
+import demo.model.vo.UserVo;
 import demo.repository.*;
 import demo.model.bo.Privilege;
 import demo.model.bo.Role;
@@ -26,10 +28,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -346,4 +345,122 @@ public class UserDao {
             return retIds;
         });
     }
+
+    public Mono<ReturnObject> changeUserState(Long id, User.State state){
+        System.out.println("userdao-changeuserstate");
+        return createUserStateModPo(id, state).flatMap(po->{
+            System.out.println("userdao-createUserStateModPo-onnext");
+            if (po == null) {
+                logger.info("用户不存在或已被删除：id = " + id);
+                return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+            }
+            else{
+//                try {
+                logger.info("用户 id = " + id + " 的状态修改为 " + state.getDescription());
+                System.out.println("po:"+po.getState()+"  "+po.getEmail()+"  "+po.getMobile()+"  "+po.getName());
+                return userRepository.save(po).map(res->{
+                    System.out.println("res:"+res.getState()+"  "+res.getEmail()+"  "+res.getMobile()+"  "+res.getName());
+                    return new ReturnObject<>();
+                });
+//                }catch (DataAccessException e) {
+//                    // 数据库错误
+//                    logger.error("数据库错误：" + e.getMessage());
+//                    return new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR,
+//                            String.format("发生了严重的数据库错误：%s", e.getMessage()));
+//                } catch (Exception e) {
+//                    // 属未知错误
+//                    logger.error("严重错误：" + e.getMessage());
+//                    return new ReturnObject<>(ResponseCode.INTERNAL_SERVER_ERR,
+//                            String.format("发生了严重的未知错误：%s", e.getMessage())) ;
+//                }
+
+            }
+
+        });
+    }
+
+    private Mono<UserPo> createUserStateModPo(Long id, User.State state) {
+        System.out.println("userDao-createUserStateModPo");
+        return userRepository.findById(id).flatMap(res->Mono.just(Optional.of(res))).defaultIfEmpty(Optional.empty()).flatMap(resOptional-> {
+            if (!resOptional.isPresent()) {
+                System.out.println("userdao-notfound-user");
+                return Mono.just(null);
+            } else if (resOptional.get().getState() != null && User.State.getTypeByCode(resOptional.get().getState().intValue()) == User.State.DELETE) {
+                System.out.println("userdao-user-deleted");
+                return Mono.just(null);
+            } else {
+                // 构造 User 对象以计算签名
+                User user = new User(resOptional.get());
+                user.setState(state);
+
+                System.out.println("user:"+user.getState()+"  "+user.getEmail()+"  "+user.getMobile()+"  "+user.getName());
+                // 构造一个全为 null 的 vo 因为其他字段都不用更新
+                UserVo vo = new UserVo();
+                UserPo userPo = user.createUpdatePo(vo,resOptional.get());
+                userPo.setMobileVerified(resOptional.get().getMobileVerified());
+                userPo.setEmailVerified(resOptional.get().getEmailVerified());
+                userPo.setEmail(AES.encrypt(user.getEmail(),User.AESPASS));
+                userPo.setMobile(AES.encrypt(user.getMobile(),User.AESPASS));
+                userPo.setName(AES.encrypt(user.getName(),User.AESPASS));
+                System.out.println("userpo:"+userPo.getState()+"  "+userPo.getEmail()+"  "+userPo.getMobile()+"  "+userPo.getName());
+                return Mono.just(userPo);
+            }
+        });
+    }
+
+    public Mono<ReturnObject> modifyUserByVo(Long id, UserVo userVo) {
+        // 查询密码等资料以计算新签名
+        return userRepository.findById(id).flatMap(res->Mono.just(Optional.of(res))).defaultIfEmpty(Optional.empty()).flatMap(resOptional->{
+            if (!resOptional.isPresent()){
+                logger.info("用户不存在或已被删除：id = " + id);
+                return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+            }else if(resOptional.get().getState() != null && User.State.getTypeByCode(resOptional.get().getState().intValue()) == User.State.DELETE){
+                logger.info("用户不存在或已被删除：id = " + id);
+                return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+            }else{
+                // 构造 User 对象以计算签名
+                User user = new User(resOptional.get());
+                UserPo po = user.createUpdatePo(userVo,resOptional.get());
+                po = reSetUserPo(resOptional.get(),po);
+
+                // 将更改的联系方式 (如发生变化) 的已验证字段改为 false
+                if (userVo.getEmail() != null && !userVo.getEmail().equals(user.getEmail())) {
+                    po.setEmailVerified((byte) 0);
+                }
+                if (userVo.getMobile() != null && !userVo.getMobile().equals(user.getMobile())) {
+                    po.setMobileVerified((byte) 0);
+                }
+                // 更新并检查更新有否成功
+                return userRepository.save(po).flatMap(res->Mono.just(Optional.of(res))).defaultIfEmpty(Optional.empty()).flatMap(resOptional2->{
+                    if (!resOptional2.isPresent()){
+                        logger.info("用户不存在或已被删除：id = " + id);
+                        return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+                    }else {
+                        logger.info("用户 id = " + id + " 的资料已更新");
+                        return Mono.just(new ReturnObject<>());
+                    }
+                });
+
+            }
+        });
+    }
+
+    public UserPo reSetUserPo(UserPo old,UserPo newPo){
+        newPo.setEmailVerified(old.getEmailVerified());
+        newPo.setMobileVerified(old.getMobileVerified());
+        if(newPo.getName()==null){
+            newPo.setName(old.getName());
+        }
+        if(newPo.getAvatar()==null){
+            newPo.setAvatar(old.getAvatar());
+        }
+        if(newPo.getEmail()==null){
+            newPo.setEmail(old.getEmail());
+        }
+        if (newPo.getMobile()==null){
+            newPo.setMobile(old.getMobile());
+        }
+        return newPo;
+    }
+
 }

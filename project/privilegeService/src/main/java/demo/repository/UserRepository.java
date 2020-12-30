@@ -18,4 +18,8 @@ public interface UserRepository extends ReactiveCrudRepository<UserPo,Long> {
     Mono<UserPo> findByUserName(String username);
 
     Mono<UserPo> findByUserNameAndMobile(String userName,String mobile);
+
+    Mono<Integer> countAllByUserName(String username);
+    Mono<Integer> countAllByMobile(String mobile);
+    Mono<Integer> countAllByEmail(String email);
 }

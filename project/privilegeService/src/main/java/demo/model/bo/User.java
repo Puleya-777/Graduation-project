@@ -182,7 +182,7 @@ public class User implements VoObject {
         String nameEnc = vo.getName() == null ? null : AES.encrypt(vo.getName(), User.AESPASS);
         String mobEnc = vo.getMobile() == null ? null : AES.encrypt(vo.getMobile(), User.AESPASS);
         String emlEnc = vo.getEmail() == null ? null : AES.encrypt(vo.getEmail(), User.AESPASS);
-        Byte state = (byte) this.state.code;
+        Integer state =  this.state.code;
 
         UserPo po = new UserPo();
         po.setId(id);
@@ -197,6 +197,9 @@ public class User implements VoObject {
         po.setGmtCreate(it.getGmtCreate());
         po.setDepartId(it.getDepartId());
         po.setCreatorId(it.getCreatorId());
+        po.setLastLoginIp(it.getLastLoginIp());
+        po.setLastLoginTime(it.getLastLoginTime());
+        po.setOpenId(it.getOpenId());
 
         po.setGmtModified(LocalDateTime.now());
 

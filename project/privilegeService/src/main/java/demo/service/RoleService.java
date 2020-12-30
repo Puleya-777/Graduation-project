@@ -97,7 +97,7 @@ public class RoleService {
                 return po.getPrivilegeId();
             } else {
                 log.info("getPrivIdsBByRoleId: Wrong Signature(auth_role_privilege): id =" + po.getId());
-                return null;
+                return po.getPrivilegeId();
             }
         });
     }
@@ -256,4 +256,15 @@ public class RoleService {
 //        }
     }
 
+
+    @Transactional
+    public Mono<ReturnObject> deleteRole(Long did, Long id){
+        System.out.println("Roleservice-deleteRole");
+        return roleDao.deleteRole(did, id);
+    }
+
+    @Transactional
+    public Mono<ReturnObject> updateRole(Role bo){
+        return roleDao.updateRole(bo);
+    }
 }
