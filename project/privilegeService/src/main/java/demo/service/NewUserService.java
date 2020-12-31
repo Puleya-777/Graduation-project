@@ -279,6 +279,12 @@ public class NewUserService {
     }
 
     public Flux getAllNewUser(Long did){
-        return newUserRepository.findAllByDepartId(did==null?0L:did);
+        return newUserRepository.findAllByDepartId(did==null?0L:did).map(po->{
+            po.setPassword(null);
+            po.setMobile(AES.decrypt(po.getMobile(),User.AESPASS));
+            po.setEmail(AES.decrypt(po.getEmail(),User.AESPASS));
+            po.setName(AES.decrypt(po.getName(),User.AESPASS));
+            return po;
+        });
     }
 }

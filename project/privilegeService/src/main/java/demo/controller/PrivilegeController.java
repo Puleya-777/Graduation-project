@@ -744,7 +744,6 @@ public class PrivilegeController {
     }
 
     /**
-     * TODO 邮箱,手机解密，增加返回Vo
      * 获取新用户列表
      */
     @GetMapping(value = "shops/{did}/adminusers/allnew",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
