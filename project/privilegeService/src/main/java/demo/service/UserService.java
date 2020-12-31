@@ -300,10 +300,10 @@ public class UserService {
                 redisTemplate.opsForValue().set("ip_"+ip,ip);
                 redisTemplate.expire("ip_" + ip, 60*1000, TimeUnit.MILLISECONDS);
                 //验证邮箱、手机号
-                return userRepository.findByMobile(AES.encrypt(vo.getMobile(),User.AESPASS)).flatMap(userPo -> {
-                    if(!userPo.getEmail().equals(AES.encrypt(vo.getEmail(), User.AESPASS))){
-                        return Mono.just(new ReturnObject<>(ResponseCode.EMAIL_WRONG));
-                    }else{
+                return userRepository.findByEmail(AES.encrypt(vo.getEmail(),User.AESPASS)).flatMap(userPo -> {
+//                    if(!userPo.getEmail().equals(AES.encrypt(vo.getEmail(), User.AESPASS))){
+//                        return Mono.just(new ReturnObject<>(ResponseCode.EMAIL_WRONG));
+//                    }else{
                         //随机生成验证码
                         String captcha = RandomCaptcha.getRandomString(6);
                         while(redisTemplate.hasKey(captcha)) {
@@ -316,8 +316,8 @@ public class UserService {
                         //五分钟后过期
                         redisTemplate.expire("cp_" + captcha, 5*60*1000, TimeUnit.MILLISECONDS);
                         return Mono.just(new ReturnObject<>(captcha));
-                    }
-                }).defaultIfEmpty(new ReturnObject<>(ResponseCode.MOBILE_WRONG));
+//                    }
+                }).defaultIfEmpty(new ReturnObject<>(ResponseCode.EMAIL_WRONG));
             }
         });
 
@@ -348,12 +348,14 @@ public class UserService {
                 return Mono.just(new ReturnObject<>(ResponseCode.AUTH_INVALID_ACCOUNT));
             } else {
                 String id = redisTemplate.opsForValue().get("cp_" + modifyPwdVo.getCaptcha()).toString();
-                return userRepository.findById(Long.parseLong(id)).flatMap(userPo -> {
-                    if (AES.decrypt(userPo.getPassword(), User.AESPASS).equals(modifyPwdVo.getNewPassword())) {
+                return userRepository.findById(Long.parseLong(id)).flatMap(po -> {
+                    if (AES.decrypt(po.getPassword(), User.AESPASS).equals(modifyPwdVo.getNewPassword())) {
                         return Mono.just(new ReturnObject<>(ResponseCode.PASSWORD_SAME));
                     }
-                    userPo.setPassword(AES.encrypt(modifyPwdVo.getNewPassword(), User.AESPASS));
-                    return userRepository.save(userPo).flatMap(it -> Mono.just(new ReturnObject<>(ResponseCode.OK)));
+                    po.setPassword(AES.encrypt(modifyPwdVo.getNewPassword(), User.AESPASS));
+                   //计算新签名
+                    po.updateSignature();
+                    return userRepository.save(po).flatMap(it -> Mono.just(new ReturnObject<>(ResponseCode.OK)));
                 });
 
             }

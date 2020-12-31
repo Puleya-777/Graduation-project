@@ -8,5 +8,6 @@ import lombok.Data;
 public class ResetPwdVo {
     private String mobile;
     private String email;
+    private String userName;
 }
 

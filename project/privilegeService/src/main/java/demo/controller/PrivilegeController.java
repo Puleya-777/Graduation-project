@@ -607,6 +607,7 @@ public class PrivilegeController {
     public Mono resetPassword(@RequestBody ResetPwdVo vo, BindingResult bindingResult
             , HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest) {
 
+        logger.info("重置密码:"+vo.toString());
         if (logger.isDebugEnabled()) {
             logger.debug("resetPassword");
         }
@@ -743,7 +744,8 @@ public class PrivilegeController {
     }
 
     /**
-     * 获取新用户列表(pass?使用Flux,需前后端联调)
+     * TODO 邮箱,手机解密，增加返回Vo
+     * 获取新用户列表
      */
     @GetMapping(value = "shops/{did}/adminusers/allnew",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
     public Mono getNewUser(@PathVariable Long did){

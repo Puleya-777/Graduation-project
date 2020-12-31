@@ -70,7 +70,7 @@ public class RoleService {
                                             tuple -> {
                                                 RolePrivilege e = new RolePrivilege();
                                                 e.setCreator(tuple.getT1());
-                                                e.setId(pid);
+                                                e.setId(po.getId());
                                                 e.setPrivilege(tuple.getT2());
                                                 e.setRole(rolePo);
                                                 e.setGmtModified(po.getGmtCreate().toString());
