@@ -185,7 +185,8 @@ public class UserDao {
     }
 
     public Mono<PageInfo<UserPo>> findAllUsers(String userNameAES, String mobileAES, Integer page, Integer pagesize) {
-        return userRepository.findAllByUserNameAndMobile(userNameAES,mobileAES)
+//        return userRepository.findAllByUserNameAndMobile(userNameAES,mobileAES)
+        return userRepository.findAll()
                 .collect(Collectors.toList()).map(PageInfo::new);
     }
 
