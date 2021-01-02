@@ -354,11 +354,10 @@ public class PrivilegeController {
     })
     @GetMapping(value = "/shops/{did}/adminusers/all")
     public Mono<Object> findAllUser(
-            @RequestParam String userName,
-            @RequestParam String mobile,
+            @RequestParam(required = false) String userName,
+            @RequestParam(required = false) String mobile,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pagesize) {
-
         if(page <= 0 || pagesize <= 0) {
             return Mono.just(Common.getNullRetObj(new ReturnObject<>(ResponseCode.FIELD_NOTVALID), httpServletResponse));
         }else{
