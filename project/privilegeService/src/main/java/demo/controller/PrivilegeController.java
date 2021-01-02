@@ -606,6 +606,7 @@ public class PrivilegeController {
     public Mono resetPassword(@RequestBody ResetPwdVo vo, BindingResult bindingResult
             , HttpServletResponse httpServletResponse, HttpServletRequest httpServletRequest) {
 
+        logger.info("重置密码:"+vo.toString());
         if (logger.isDebugEnabled()) {
             logger.debug("resetPassword");
         }
@@ -728,11 +729,11 @@ public class PrivilegeController {
     })
     @Audit // 需要认证
     @PutMapping("shops/{did}/adminusers/{id}/approve")
-    public Mono approveUser(@PathVariable Long id,@PathVariable Long did,@RequestBody Boolean approve,@Depart Long shopid) {
-        logger.info("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve);
+    public Mono approveUser(@PathVariable Long id,@PathVariable Long did,@RequestBody ApproveVo approve1,@Depart Long shopid) {
+        logger.info("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve1.getApprove());
         if(did==0|| did.equals(shopid))
         {
-            return newUserService.approveUser(approve,id);
+            return newUserService.approveUser(approve1.getApprove(),id);
         }
         else
         {
@@ -742,7 +743,7 @@ public class PrivilegeController {
     }
 
     /**
-     * 获取新用户列表(pass?使用Flux,需前后端联调)
+     * 获取新用户列表
      */
     @GetMapping(value = "shops/{did}/adminusers/allnew",produces =  MediaType.APPLICATION_STREAM_JSON_VALUE)
     public Mono getNewUser(@PathVariable Long did){
