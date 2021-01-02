@@ -730,11 +730,11 @@ public class PrivilegeController {
     })
     @Audit // 需要认证
     @PutMapping("shops/{did}/adminusers/{id}/approve")
-    public Mono approveUser(@PathVariable Long id,@PathVariable Long did,@RequestBody Boolean approve,@Depart Long shopid) {
-        logger.info("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve);
+    public Mono approveUser(@PathVariable Long id,@PathVariable Long did,@RequestBody ApproveVo approve1,@Depart Long shopid) {
+        logger.info("approveUser: did = "+ did+" userid: id = "+ id+" opinion: "+approve1.getApprove());
         if(did==0|| did.equals(shopid))
         {
-            return newUserService.approveUser(approve,id);
+            return newUserService.approveUser(approve1.getApprove(),id);
         }
         else
         {
