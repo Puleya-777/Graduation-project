@@ -207,7 +207,7 @@ public class NewUserService {
     public Mono approveUser(boolean approve, Long id) {
         return Mono.just(approve).flatMap(aBoolean -> {
             if(!aBoolean){
-                return physicallyDeleteUser(id);
+                return physicallyDeleteUser(id).map(it-> new ReturnObject());
             }else{
                 return newUserRepository.findById(id).flatMap(newUserPo -> {
                     log.info("成功找到该新用户");
