@@ -141,11 +141,11 @@ public class UserService {
     }
 
     public Mono<ReturnObject<PageInfo<VoObject>>> findAllUsers(String userName, String mobile, Integer page, Integer pagesize) {
-        String userNameAES = userName.isBlank() ? "" : AES.encrypt(userName, User.AESPASS);
-        String mobileAES = mobile.isBlank() ? "" : AES.encrypt(mobile, User.AESPASS);
+//        String userNameAES = userName.isBlank() ? "" : AES.encrypt(userName, User.AESPASS);
+//        String mobileAES = mobile.isBlank() ? "" : AES.encrypt(mobile, User.AESPASS);
 
         PageHelper.startPage(page, pagesize);
-        Mono<PageInfo<UserPo>> userPos = userDao.findAllUsers(userName, mobileAES, page, pagesize);
+        Mono<PageInfo<UserPo>> userPos = userDao.findAllUsers(page, pagesize);
         Mono<List<VoObject>> users=userPos.map(pageInfo->pageInfo.getList().stream().map(User::new)
                 .filter(User::authetic).collect(Collectors.toList()));
         System.out.println(users.block());
