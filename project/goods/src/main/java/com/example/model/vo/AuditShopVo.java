@@ -3,10 +3,8 @@ package com.example.model.vo;
 import lombok.Data;
 
 @Data
-public class BrandVo {
+public class AuditShopVo {
 
-    String name;
-
-    String detail;
+    Boolean type;
 
 }

@@ -1,22 +1,19 @@
 package com.example.model.po;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
-@Table("goods_category")
 @Data
-public class CategoryPo {
+@Table("coupon_sku")
+public class CouponSkuPo {
 
-    @Id
     Long id;
 
-    String name;
+    Long activityId;
 
-    //上一级分类id
-    Long pid;
+    Long skuId;
 
     LocalDateTime gmtCreate;
 

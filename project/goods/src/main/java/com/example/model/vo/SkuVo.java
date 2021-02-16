@@ -41,4 +41,5 @@ public class SkuVo {
         detail=sku.getDetail();
     }
 
+
 }

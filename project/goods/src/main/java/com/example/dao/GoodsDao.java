@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.util.Optional;
 
 @Repository
 public class GoodsDao {
@@ -65,6 +66,18 @@ public class GoodsDao {
         return skuRepository.save(skuPo);
     }
 
-    public Mono<ReturnObject> deleteSku(Integer skuId) {
+    public Mono<Integer> deleteSku(Long skuId) {
+        return skuRepository.deleteSkuPoById(skuId);
+    }
+
+    public Mono<Spu> getSpuInfoById(Long id) {
+        Mono<SpuPo> spuPoMono=spuRepository.findById(id);
+        Mono<Brand> brandMono=spuPoMono.flatMap(spuPo -> brandRepository.findById(spuPo.getBrandId()).map(Brand::new));
+        Mono<Category> categoryMono=spuPoMono.flatMap(spuPo -> categoryRepository.findById(spuPo.getCategoryId()).map(Category::new));
+        Mono<Shop> shopMono=spuPoMono.flatMap(spuPo -> shopRepository.findById(spuPo.getShopId()).map(Shop::new));
+        return Mono.zip(spuPoMono,brandMono,categoryMono,shopMono).map(tuple->{
+            Spu spu=new Spu(tuple.getT1(),tuple.getT2(),tuple.getT3(),tuple.getT4());
+            return spu;
+        });
     }
 }

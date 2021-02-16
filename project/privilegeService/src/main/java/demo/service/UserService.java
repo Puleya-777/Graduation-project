@@ -148,7 +148,9 @@ public class UserService {
         Mono<PageInfo<UserPo>> userPos = userDao.findAllUsers(page, pagesize);
         Mono<List<VoObject>> users=userPos.map(pageInfo->pageInfo.getList().stream().map(User::new)
                 .filter(User::authetic).collect(Collectors.toList()));
-        System.out.println(users.block());
+        Mono<List<User>> users2=userPos.map(pageInfo->pageInfo.getList().stream().map(User::new)
+                .filter(User::authetic).collect(Collectors.toList()));
+        System.out.println(AES.decrypt(users2.block().get(0).getPassword(),User.AESPASS));
         return Mono.zip(userPos,users).map(tuple-> {
             PageInfo<VoObject> returnObject = new PageInfo<>(tuple.getT2());
             returnObject.setPages(tuple.getT1().getPages());

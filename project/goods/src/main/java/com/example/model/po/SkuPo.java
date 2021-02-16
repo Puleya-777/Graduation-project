@@ -58,4 +58,19 @@ public class SkuPo {
 
     }
 
+    public void setFromVo(SkuVo skuVo){
+        skuSn=skuVo.getSn();
+        name=skuVo.getName();
+        originalPrice=skuVo.getOriginalPrice();
+        configuration=skuVo.getConfiguration();
+        weight=skuVo.getWeight();
+        imageUrl=skuVo.getImageUrl();
+
+        state=0;
+        inventory=skuVo.getInventory();
+        detail=skuVo.getDetail();
+
+        disabled=true;
+    }
+
 }

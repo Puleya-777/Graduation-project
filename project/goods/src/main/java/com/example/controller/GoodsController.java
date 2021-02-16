@@ -1,8 +1,14 @@
 package com.example.controller;
 
 import com.example.annotation.LoginUser;
+import com.example.model.po.BrandPo;
+import com.example.model.po.CategoryPo;
+import com.example.model.po.FloatPricePo;
 import com.example.model.po.SkuPo;
 import com.example.model.vo.*;
+import com.example.service.BrandService;
+import com.example.service.CategoryService;
+import com.example.service.FloatPriceService;
 import com.example.service.GoodsService;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
@@ -20,7 +26,12 @@ public class GoodsController {
 
     @Autowired
     GoodsService goodsService;
-
+    @Autowired
+    CategoryService categoryService;
+    @Autowired
+    FloatPriceService floatPriceService;
+    @Autowired
+    BrandService brandService;
 
     @ApiOperation(value = "获得商品SPU的所有状态")
 //    @ApiImplicitParams({
@@ -112,7 +123,7 @@ public class GoodsController {
      * @return
      */
     @DeleteMapping("/shops/{shopId}/skus/{id}")
-    public Mono<Object> deleteSku(@LoginUser Long userId,@PathVariable Integer skuId,@PathVariable Integer shopId){
+    public Mono<Object> deleteSku(@LoginUser Long userId,@PathVariable Long skuId,@PathVariable Integer shopId){
         return goodsService.deleteSku(skuId).map(Common::getRetObject);
     }
 
@@ -126,8 +137,8 @@ public class GoodsController {
      */
     @PutMapping("/shops/{shopId}/skus/{id}")
     public Mono<Object> putSku(@LoginUser Long userId, @PathVariable Integer shopId,
-                               @PathVariable Integer skuId, @RequestBody SkuVo skuVo){
-        return null;
+                               @PathVariable Long skuId, @RequestBody SkuVo skuVo){
+        return goodsService.putSku(skuId,skuVo).map(Common::getRetObject);
     }
 
     /**
@@ -136,8 +147,8 @@ public class GoodsController {
      * @return
      */
     @GetMapping("/categories/{id}/subcategories")
-    public Mono<Object> queryCategoryRelation(@PathVariable Integer id){
-        return null;
+    public Mono<Object> queryCategoryRelation(@PathVariable Long id){
+        return goodsService.queryCategoryRelation(id).map(Common::getRetObject);
     }
 
     /**
@@ -150,8 +161,8 @@ public class GoodsController {
      */
     @PostMapping("/shops/{shopId}/categories/{id}/subcategories")
     public Mono<Object> addGoodsCategory(@LoginUser Long userId,@PathVariable Integer shopId,
-                                         @PathVariable Integer id,@RequestBody CategoryInfoVo categoryDetail){
-        return null;
+                                         @PathVariable Long id,@RequestBody CategoryInfoVo categoryDetail){
+        return categoryService.addGoodsCategory(id,categoryDetail).map(Common::getRetObject);
     }
 
     /**
@@ -164,8 +175,8 @@ public class GoodsController {
      */
     @PutMapping("/shops/{shopId}/categories/{id}")
     public Mono<Object> modifyCategory(@LoginUser Long userId,@PathVariable Integer shopId,
-                                       @PathVariable Integer id,@RequestBody CategoryInfoVo vo){
-        return null;
+                                       @PathVariable Long id,@RequestBody CategoryInfoVo vo){
+        return categoryService.addGoodsCategory(id,vo).map(Common::getRetObject);
     }
 
     /**
@@ -177,8 +188,8 @@ public class GoodsController {
      */
     @DeleteMapping("/shops/{shopId}/categories/{id}")
     public Mono<Object> deleteCategory(@LoginUser Integer userId,@PathVariable Integer shopId,
-                                       @PathVariable Integer id){
-        return null;
+                                       @PathVariable Long id){
+        return categoryService.deleteCategory(id).map(Common::getRetObject);
     }
 
     /**
@@ -187,8 +198,8 @@ public class GoodsController {
      * @return
      */
     @GetMapping("/spus/{id}")
-    public Mono<Object> getSpuDetail(@PathVariable Integer id){
-        return null;
+    public Mono<Object> getSpuDetail(@PathVariable Long id){
+        return goodsService.getSpuInfoById(id).map(Common::getRetObject);
     }
 
     /**
@@ -200,8 +211,8 @@ public class GoodsController {
      */
     @GetMapping("/share/{sid}/skus/{id}")
     public Mono<Object> getShareGoodsSpuDetail(@LoginUser Long userId,@PathVariable Integer sid,
-                                               @PathVariable Integer id){
-        return null;
+                                               @PathVariable Long id){
+        return goodsService.getSpuInfoById(id).map(Common::getRetObject);
     }
 
     /**
@@ -250,8 +261,8 @@ public class GoodsController {
      * @return
      */
     @PutMapping("/shops/{shopId}/skus/{id}/onshelves")
-    public Mono<Object> goodsOnShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> goodsOnShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
+        return goodsService.modifyGoodsState(id,0).map(Common::getRetObject);
     }
 
     /**
@@ -262,14 +273,24 @@ public class GoodsController {
      * @return
      */
     @PutMapping("/shops/{shopId}/skus/{id}/offshelves")
-    public Mono<Object> goodsOffShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> goodsOffShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
+        return goodsService.modifyGoodsState(id,1).map(Common::getRetObject);
     }
 
+    /**
+     * 管理员新增商品价格浮动
+     * @param userId
+     * @param shopId
+     * @param id  sku id
+     * @param floatPriceVo
+     * @return
+     */
     @PostMapping("/shops/{shopId}/skus/{id}/floatPrices")
     public Mono<Object> addFloatingPrice(@LoginUser Long userId, @PathVariable Integer shopId,
-                                         @PathVariable Integer id, @RequestBody FloatPriceVo floatPriceVo){
-        return null;
+                                         @PathVariable Long id, @RequestBody FloatPriceVo floatPriceVo){
+        FloatPricePo floatPricePo=new FloatPricePo(floatPriceVo,id,userId);
+
+        return floatPriceService.addFloatingPrice(floatPricePo).map(Common::getRetObject);
     }
 
     /**
@@ -280,20 +301,21 @@ public class GoodsController {
      * @return
      */
     @DeleteMapping("/shops/{shopId}/floatPrices/{id}")
-    public Mono<Object> invalidFloatPrice(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> invalidFloatPrice(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
+        return floatPriceService.invalidFloatPrice(userId,id).map(Common::getRetObject);
     }
 
     /**
      * 管理员新增品牌
      * @param userId
-     * @param id
+     * @param id    店铺id
      * @param brandVo
      * @return
      */
     @PostMapping("/shops/{id}/brands")
     public Mono<Object> addBrand(@LoginUser Long userId, @PathVariable Integer id, @RequestBody BrandVo brandVo){
-        return null;
+        BrandPo brandPo=new BrandPo(brandVo);
+        return brandService.addBrand(brandPo).map(Common::getRetObject);
     }
 
     /**
@@ -319,7 +341,7 @@ public class GoodsController {
     @GetMapping("/brands")
     public Mono<Object> queryBrand(@RequestParam(required = false) Integer page,
                                    @RequestParam(required = false) Integer pageSize){
-        return null;
+        return brandService.queryAllBrand(page,pageSize).map(Common::getRetObject);
     }
 
     /**
@@ -332,8 +354,8 @@ public class GoodsController {
      */
     @PutMapping("/shops/{shopId}/brands/{id}")
     public Mono<Object> modifyBrand(@LoginUser Long userId,@PathVariable Integer shopId,
-                                    @PathVariable Integer id,@RequestBody BrandVo brandVo){
-        return null;
+                                    @PathVariable Long id,@RequestBody BrandVo brandVo){
+        return brandService.modifyBrand(id,brandVo).map(Common::getRetObject);
     }
 
     /**
@@ -345,8 +367,8 @@ public class GoodsController {
      */
     @DeleteMapping("/shops/{shopId}/brands/{id}")
     public Mono<Object> deleteBrand(@LoginUser Long userId,@PathVariable Integer shopId,
-                                    @PathVariable Integer id){
-        return null;
+                                    @PathVariable Long id){
+        return brandService.deleteBrand(id).map(Common::getRetObject);
     }
 
     /**
@@ -355,13 +377,13 @@ public class GoodsController {
      * @param userId
      * @param shopId
      * @param spuId
-     * @param id
+     * @param id  分类 id
      * @return
      */
     @PostMapping("/shops/{shopId}/spus/{spuId}/categories/{id}")
     public Mono<Object> addSpuCategory(@LoginUser Long userId,@PathVariable Integer shopId,
-                                       @PathVariable Integer spuId,@PathVariable Integer id){
-        return null;
+                                       @PathVariable Long spuId,@PathVariable Long id){
+        return goodsService.addSpuCategory(spuId,id).map(Common::getRetObject);
     }
 
     /**
@@ -373,9 +395,9 @@ public class GoodsController {
      * @return
      */
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/categories/{id}")
-    public Mono<Object> removeSpuCategory(@LoginUser Long userId,@PathVariable Integer shopId,
-                                       @PathVariable Integer spuId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> removeSpuCategory(@LoginUser Long userId,@PathVariable Long shopId,
+                                       @PathVariable Long spuId,@PathVariable Long id){
+        return goodsService.addSpuCategory(spuId,null).map(Common::getRetObject);
     }
 
     /**
@@ -388,9 +410,9 @@ public class GoodsController {
      * @return
      */
     @PostMapping("/shops/{shopId}/spus/{spuId}/brands/{id}")
-    public Mono<Object> addSpuBrand(@LoginUser Long userId,@PathVariable Integer shopId,
-                                    @PathVariable Integer spuId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> addSpuBrand(@LoginUser Long userId,@PathVariable Long shopId,
+                                    @PathVariable Long spuId,@PathVariable Long id){
+        return goodsService.addSpuBrand(spuId,id).map(Common::getRetObject);
     }
 
     /**
@@ -403,8 +425,8 @@ public class GoodsController {
      * @return
      */
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/brands/{id}")
-    public Mono<Object> removeSpuBrand(@LoginUser Long userId,@PathVariable Integer shopId,
-                                    @PathVariable Integer spuId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> removeSpuBrand(@LoginUser Long userId,@PathVariable Long shopId,
+                                    @PathVariable Long spuId,@PathVariable Long id){
+        return goodsService.addSpuBrand(spuId,null).map(Common::getRetObject);
     }
 }

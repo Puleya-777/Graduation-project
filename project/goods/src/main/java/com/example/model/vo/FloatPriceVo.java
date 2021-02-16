@@ -2,14 +2,16 @@ package com.example.model.vo;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class FloatPriceVo {
 
     Integer activityPrice;
 
-    String beginTime;
+    LocalDateTime beginTime;
 
-    String endTime;
+    LocalDateTime endTime;
 
     Integer quantity;
 

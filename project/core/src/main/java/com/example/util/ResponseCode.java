@@ -24,6 +24,8 @@ public enum ResponseCode {
     RESOURCE_FALSIFY(507, "信息签名不正确"),
     IMG_FORMAT_ERROR(508,"图片格式不正确"),
     IMG_SIZE_EXCEED(509,"图片大小超限"),
+    IMG_UPDATE_FAIL(510,"图片写入失败"),
+
     //--------------------------------------------
 
 

@@ -20,6 +20,8 @@ public class Spu {
 
     Shop shop;
 
+    Freight freight;
+
     String goodsSn;
 
     String detail;

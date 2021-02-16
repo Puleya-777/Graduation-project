@@ -1,8 +1,9 @@
 package com.example.model.bo;
 
+import com.example.model.VoObject;
 import com.example.model.po.BrandPo;
 
-public class Brand {
+public class Brand implements VoObject {
 
     Long id;
 
@@ -16,4 +17,13 @@ public class Brand {
         imageUrl=brandPo.getName();
     }
 
+    @Override
+    public Object createVo() {
+        return null;
+    }
+
+    @Override
+    public Object createSimpleVo() {
+        return null;
+    }
 }
