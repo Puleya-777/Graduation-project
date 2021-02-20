@@ -93,7 +93,7 @@ public class CouponService {
     }
 
     public Mono<ReturnObject> showCoupons(Long userId, Integer state, Integer page, Integer pageSize) {
-        return couponRepository.findByCustomerIdAAndState(userId,state).map(ReturnObject::new);
+        return couponRepository.findByCustomerIdAndState(userId,state).map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> changeStateOfCouponActivity(Long id, int state) {

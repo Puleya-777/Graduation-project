@@ -30,7 +30,7 @@ public class SpuPo {
 
     String imageUrl;        //图片链接
 
-    Spec spec;        //可选规格JSON
+    String spec;        //可选规格JSON
 
     Boolean disabled;    //禁止访问：0不启用disabled，1启用disabled
 

@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface CouponRepository extends ReactiveCrudRepository<CouponPo,Long> {
 
-    Mono<CouponPo> findByCustomerIdAAndState(Long customerId,Integer state);
+    Mono<CouponPo> findByCustomerIdAndState(Long customerId,Integer state);
 
 }

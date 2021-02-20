@@ -28,7 +28,7 @@ public class Spu {
 
     String imageUrl;
 
-    Spec spec;
+//    Spec spec;
 
     List<SimpleRetSku> skuList;
 
@@ -47,7 +47,7 @@ public class Spu {
         goodsSn=spuPo.getGoodsSn();
         detail=spuPo.getDetail();
         imageUrl=spuPo.getImageUrl();
-        spec=spuPo.getSpec();
+//        spec=spuPo.getSpec();
 
         gmtCreate=spuPo.getGmtCreate();
         gmtModified=spuPo.getGmtModified();

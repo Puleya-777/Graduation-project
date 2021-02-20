@@ -3,6 +3,7 @@ package com.example.service;
 import com.example.dao.CategoryDao;
 import com.example.dao.GoodsDao;
 import com.example.model.VoObject;
+import com.example.model.bo.Sku;
 import com.example.model.po.FloatPricePo;
 import com.example.model.po.SkuPo;
 import com.example.model.po.SpuPo;
@@ -13,6 +14,8 @@ import com.example.repository.SkuRepository;
 import com.example.repository.SpuRepository;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +24,9 @@ import reactor.core.publisher.Mono;
 import javax.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class GoodsService {
@@ -130,5 +135,25 @@ public class GoodsService {
                         return spuRepository.save(spuPo);
                     }
                 }).map(ReturnObject::new);
+    }
+
+    public Mono<ReturnObject> querySku(String skuSn, Long spuId, Integer page, Integer pageSize) {
+        PageHelper.startPage(page, pageSize);
+//        Mono<List<VoObject>> skuPos=skuRepository.findAllByGoodsSpuId(spuId).filter(skuPo -> skuPo.getSkuSn().equals(skuSn))
+//                .map(Sku::new).collect(Collectors.toList());
+        Mono<List<VoObject>> skuPos=skuRepository.findAll()
+                .map(Sku::new).collect(Collectors.toList());
+        return skuPos.map(list->{
+//            PageInfo<VoObject> pageInfo = PageInfo.of(list);
+            PageInfo<VoObject> retPage=new PageInfo<>(list);
+            retPage.setPages(page);
+            retPage.setPageNum(page);
+            retPage.setPageSize(pageSize);
+            retPage.setTotal(pageSize);
+//            System.out.println("\n..........nn...........\n"+retPage.toString());
+            return new ReturnObject(retPage);
+        });
+
+
     }
 }

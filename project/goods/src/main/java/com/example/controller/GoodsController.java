@@ -12,6 +12,8 @@ import com.example.service.FloatPriceService;
 import com.example.service.GoodsService;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
+import com.example.util.ReturnObject;
+import com.example.util.States;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +48,7 @@ public class GoodsController {
     })
     @GetMapping("/skus/states")
     public Mono<Object> getGoodsSpuStatus(){
-        return null;
+        return Mono.just(States.goodsState);
     }
 
     /**
@@ -59,10 +61,11 @@ public class GoodsController {
      * @param pageSize
      * @return
      */
-    public Mono<Object> querySku(@RequestParam Integer shopId,@RequestParam String skuSn,@RequestParam String spuId,
+    @GetMapping("/skus")
+    public Mono<Object> querySku(@RequestParam Integer shopId,@RequestParam String skuSn,@RequestParam Long spuId,
                                  @RequestParam String spuSn,@RequestParam(required = false) Integer page,
                                  @RequestParam(required = false) Integer pageSize){
-        return null;
+        return goodsService.querySku(skuSn,spuId,page,pageSize).map(Common::getPageRetObject);
     }
 
     /**

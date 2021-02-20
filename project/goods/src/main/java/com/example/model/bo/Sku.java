@@ -62,6 +62,24 @@ public class Sku implements VoObject {
         disable=skuPo.getDisabled();
     }
 
+    public Sku(SkuPo skuPo){
+        id=skuPo.getId();
+        name=skuPo.getName();
+        skuSn=skuPo.getSkuSn();
+        detail=skuPo.getDetail();
+        imageUrl=skuPo.getImageUrl();
+        originalPrice=skuPo.getOriginalPrice();
+
+        inventory=skuPo.getInventory();
+        state=skuPo.getState();
+        configuration=skuPo.getConfiguration();
+        weight=skuPo.getWeight();
+
+        gmtCreate=skuPo.getGmtCreate();
+        gmtModified=skuPo.getGmtModified();
+        disable=skuPo.getDisabled();
+    }
+
     @Override
     public SkuVo createVo() {
         return new SkuVo(this);

@@ -4,6 +4,7 @@ import com.example.model.po.FloatPricePo;
 import com.example.repository.FloatPriceRepository;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -12,7 +13,7 @@ import javax.annotation.Resource;
 @Service
 public class FloatPriceService {
 
-    @Resource
+    @Autowired
     FloatPriceRepository floatPriceRepository;
 
     public Mono<ReturnObject> addFloatingPrice(FloatPricePo floatPricePo) {
