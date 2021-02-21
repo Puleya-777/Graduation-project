@@ -1,7 +1,10 @@
 package com.example.service;
 
+import com.example.model.bo.CouponActivity;
+import com.example.model.bo.Sku;
 import com.example.model.po.CouponActivityPo;
 import com.example.model.po.CouponSkuPo;
+import com.example.model.po.SkuPo;
 import com.example.model.vo.CouponActivityVo;
 import com.example.repository.CouponActivityRepository;
 import com.example.repository.CouponRepository;
@@ -40,20 +43,23 @@ public class CouponService {
     }
 
     public Mono<ReturnObject> showOwncouponactivities(Long shopId, Integer timeline, Integer page, Integer pageSize) {
-        return couponActivityRepository.findAllByShopId(shopId).collect(Collectors.toList())
+        return couponActivityRepository.findAllByShopId(shopId).map(CouponActivity::new)
+                .collect(Collectors.toList())
                 .map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> showOwnInvalidcouponactivities(Long shopId) {
         return couponActivityRepository.findAllByShopId(shopId)
                 .filter(couponActivityPo -> couponActivityPo.getState()==1)
+                .map(CouponActivity::new)
                 .collect(Collectors.toList())
                 .map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> getCouponSku(Long id, Integer page, Integer pageSize) {
-        return couponSkuRepository.findAllByActivityId(id)
-                .collect(Collectors.toList()).map(ReturnObject::new);
+        return couponSkuRepository.findAllByActivityId(id).flatMap(couponSkuPo -> {
+            return skuRepository.findById(couponSkuPo.getSkuId()).defaultIfEmpty(new SkuPo());
+        }).map(Sku::new).collect(Collectors.toList()).map(ReturnObject::new);
     }
 
 

@@ -25,4 +25,8 @@ public class CouponPo {
 
     Integer state;
 
+    LocalDateTime gmtCreate;
+
+    LocalDateTime gmtModified;
+
 }
