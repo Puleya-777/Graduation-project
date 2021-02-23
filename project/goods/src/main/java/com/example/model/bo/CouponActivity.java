@@ -2,9 +2,11 @@ package com.example.model.bo;
 
 import com.example.model.VoObject;
 import com.example.model.po.CouponActivityPo;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
+@Data
+@NoArgsConstructor
 public class CouponActivity implements VoObject {
 
     Long id;

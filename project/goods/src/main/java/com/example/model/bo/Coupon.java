@@ -11,35 +11,19 @@ public class Coupon implements VoObject {
 
     Long id;
 
-    String couponSn;
+    CouponActivity activity;
 
     String name;
 
-    Long customerId;
+    String couponSn;
 
-    Long  activityId;
-
-    LocalDateTime beginTime;
-
-    LocalDateTime endTime;
-
-    Integer state;
-
-    LocalDateTime gmtCreate;
-
-    LocalDateTime gmtModified;
 
     public Coupon(CouponPo couponPo){
         id=couponPo.getId();
         couponSn=couponPo.getCouponSn();
         name=couponPo.getName();
-        customerId=couponPo.getCustomerId();
-        activityId=couponPo.getActivityId();
-        beginTime=couponPo.getBeginTime();
-        endTime=couponPo.getEndTime();
-        state=couponPo.getState();
-        gmtCreate=couponPo.getGmtCreate();
-        gmtModified=couponPo.getGmtModified();
+        activity=new CouponActivity();
+        activity.setId(couponPo.getId());
     }
 
     @Override

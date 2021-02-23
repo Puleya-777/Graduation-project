@@ -1,20 +1,21 @@
 package com.example.service;
 
-import com.example.model.bo.CouponActivity;
-import com.example.model.bo.Sku;
-import com.example.model.po.CouponActivityPo;
-import com.example.model.po.CouponSkuPo;
-import com.example.model.po.SkuPo;
+import com.example.model.bo.*;
+import com.example.model.po.*;
 import com.example.model.vo.CouponActivityVo;
-import com.example.repository.CouponActivityRepository;
-import com.example.repository.CouponRepository;
-import com.example.repository.CouponSkuRepository;
-import com.example.repository.SkuRepository;
+import com.example.repository.*;
+import com.example.util.CommonUtil;
+import com.example.util.NacosHelp;
+import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import com.github.pagehelper.PageInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,12 @@ public class CouponService {
     CouponSkuRepository couponSkuRepository;
     @Resource
     SkuRepository skuRepository;
+    @Resource
+    ShopRepository shopRepository;
+    @Autowired
+    NacosHelp nacosHelp;
+    @Autowired
+    CommonUtil commonUtil;
 
     public Mono<ReturnObject> getCouponState() {
         return couponRepository.findAll().map(couponPo -> couponPo.getState())
@@ -39,39 +46,59 @@ public class CouponService {
         CouponActivityPo couponActivityPo=new CouponActivityPo(shopId,couponActivityVo);
         couponActivityPo.setCreatedBy(userId);
         couponActivityPo.setModiBy(userId);
-        return couponActivityRepository.save(couponActivityPo).map(ReturnObject::new);
+        return couponActivityRepository.save(couponActivityPo).map(CouponActivityDetail::new)
+                .flatMap(this::fillCouponActivity).map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> showOwncouponactivities(Long shopId, Integer timeline, Integer page, Integer pageSize) {
         return couponActivityRepository.findAllByShopId(shopId).map(CouponActivity::new)
                 .collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize))
                 .map(ReturnObject::new);
+//                .map(couponActivities -> {
+//                    PageInfo<CouponActivity> retPage=new PageInfo<>(couponActivities);
+//                    retPage.setPages(page);
+//                    retPage.setPageNum(page);
+//                    retPage.setPageSize(pageSize);
+//                    retPage.setTotal(pageSize);
+//                    return new ReturnObject(retPage);
+//                });
     }
 
-    public Mono<ReturnObject> showOwnInvalidcouponactivities(Long shopId) {
+    public Mono<ReturnObject> showOwnInvalidcouponactivities(Long shopId,Integer page,Integer pageSize) {
         return couponActivityRepository.findAllByShopId(shopId)
                 .filter(couponActivityPo -> couponActivityPo.getState()==1)
-                .map(CouponActivity::new)
+                .map(CouponActivityDetail::new)
                 .collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize))
                 .map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> getCouponSku(Long id, Integer page, Integer pageSize) {
         return couponSkuRepository.findAllByActivityId(id).flatMap(couponSkuPo -> {
             return skuRepository.findById(couponSkuPo.getSkuId()).defaultIfEmpty(new SkuPo());
-        }).map(Sku::new).collect(Collectors.toList()).map(ReturnObject::new);
+        }).map(Sku::new).collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
     }
 
 
     public Mono<ReturnObject> getCouponActivityDetails(Long shopId, Long id) {
-        return couponActivityRepository.findById(id).map(ReturnObject::new);
+        return couponActivityRepository.findById(id).defaultIfEmpty(new CouponActivityPo())
+                .map(CouponActivityDetail::new)
+                .flatMap(this::fillCouponActivity)
+                .map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> modifyActivity(Long userId, Long shopId, Long id, CouponActivityVo couponActivityVo) {
-        return couponActivityRepository.findById(id).flatMap(couponActivityPo -> {
-            couponActivityPo.setByCouponActivityVo(couponActivityVo);
-            couponActivityPo.setModiBy(userId);
-            return couponActivityRepository.save(couponActivityPo);
+        return couponActivityRepository.findById(id).defaultIfEmpty(new CouponActivityPo())
+                .flatMap(couponActivityPo -> {
+                    if(couponActivityPo.getId()==null){
+                        return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
+                    }else {
+                        couponActivityPo.setByCouponActivityVo(couponActivityVo);
+                        couponActivityPo.setModiBy(userId);
+                        return couponActivityRepository.save(couponActivityPo);
+                    }
         }).map(ReturnObject::new);
     }
 
@@ -99,13 +126,70 @@ public class CouponService {
     }
 
     public Mono<ReturnObject> showCoupons(Long userId, Integer state, Integer page, Integer pageSize) {
-        return couponRepository.findByCustomerIdAndState(userId,state).map(ReturnObject::new);
+        return couponRepository.findAllByCustomerIdAndState(userId,state)
+                .map(Coupon::new)
+                .flatMap(coupon -> {
+                    return couponActivityRepository.findById(coupon.getActivity().getId()).map(couponActivityPo -> {
+                        coupon.setActivity(new CouponActivity(couponActivityPo));
+                        return coupon;
+                    });
+                }).collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize))
+                .map(ReturnObject::new);
+
     }
 
     public Mono<ReturnObject> changeStateOfCouponActivity(Long id, int state) {
-        return couponRepository.findById(id).flatMap(couponPo -> {
-            couponPo.setState(state);
-            return couponRepository.save(couponPo);
-        }).map(ReturnObject::new);
+        return couponRepository.findById(id).defaultIfEmpty(new CouponPo()).flatMap(couponPo -> {
+            if(couponPo.getId()==null){
+                return Mono.just(new ReturnObject(ResponseCode.RESOURCE_ID_NOTEXIST));
+            }else {
+                couponPo.setState(state);
+                return couponRepository.save(couponPo).map(ReturnObject::new);
+            }
+        });
+    }
+
+    public Mono<CouponActivityDetail> fillCouponActivity(CouponActivityDetail couponActivityDetail){
+        couponActivityDetail.setCreatedBy(nacosHelp.findUserById(couponActivityDetail.getCreatedBy().getId()));
+        couponActivityDetail.setModiBy(nacosHelp.findUserById(couponActivityDetail.getModiBy().getId()));
+        return shopRepository.findById(couponActivityDetail.getShop().getId())
+                .defaultIfEmpty(new ShopPo()).map(shopPo -> {
+                    Shop shop=new Shop(shopPo);
+                    couponActivityDetail.setShop(shop);
+                    return couponActivityDetail;
+        });
+    }
+
+    public Mono<ReturnObject> customerAddCoupon(Long userId, Long activityId) {
+        CouponPo couponPo=new CouponPo();
+        couponPo.setCustomerId(userId);
+        couponPo.setActivityId(activityId);
+        return couponActivityRepository.findById(activityId).defaultIfEmpty(new CouponActivityPo())
+                .flatMap(couponActivityPo -> {
+                    if(couponActivityPo.getId()==null){
+                        return Mono.just(new ReturnObject(ResponseCode.RESOURCE_ID_NOTEXIST));
+                    }else if(couponActivityPo.getBeginTime().isAfter(LocalDateTime.now())){
+                        return Mono.just(new ReturnObject(ResponseCode.COUPON_NOTBEGIN));
+                    }else if(couponActivityPo.getEndTime().isBefore(LocalDateTime.now())){
+                        return Mono.just(new ReturnObject(ResponseCode.COUPON_END));
+                    }else if(couponActivityPo.getQuantitiyType()==1&&couponActivityPo.getQuantity()==0){
+                        return Mono.just(new ReturnObject(ResponseCode.COUPON_FINISH));
+                    }
+                    couponPo.setBeginTime(LocalDateTime.now());
+                    couponPo.setName(couponActivityPo.getName()+"的优惠卷");
+                    couponPo.setState(1);
+                    if(couponActivityPo.getValidTerm()==0){
+                        couponPo.setEndTime(couponActivityPo.getEndTime());
+                    }else{
+                        couponPo.setEndTime(couponPo.getBeginTime().plusDays(couponActivityPo.getValidTerm()));
+                    }
+                    couponPo.setCouponSn(LocalDateTime.now().toString()+couponActivityPo.getName());
+                    if(couponActivityPo.getQuantitiyType()==1){
+                        couponActivityPo.setQuantity(couponActivityPo.getQuantity()-1);
+                        couponActivityRepository.save(couponActivityPo);
+                    }
+                    return couponRepository.save(couponPo).map(Coupon::new).map(ReturnObject::new);
+        });
     }
 }

@@ -11,7 +11,7 @@ public class Comment implements VoObject {
 
     Long id;
 
-    User user;
+    User customer;
 
     Long goodsSkuId;
 
@@ -27,8 +27,8 @@ public class Comment implements VoObject {
 
     public Comment(CommentPo commentPo){
         id=commentPo.getId();
-        user =new User();
-        user.setId(commentPo.getCustomerId());
+        customer =new User();
+        customer.setId(commentPo.getCustomerId());
         goodsSkuId=commentPo.getGoodsSkuId();
         type=commentPo.getType();
         content=commentPo.getContent();

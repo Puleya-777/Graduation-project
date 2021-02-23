@@ -4,6 +4,8 @@ import com.example.annotation.LoginUser;
 import com.example.model.vo.CommentVo;
 import com.example.service.CommentService;
 import com.example.util.Common;
+import com.example.util.ResponseCode;
+import com.example.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -15,6 +17,7 @@ public class CommentController {
     @Autowired
     CommentService commentService;
 
+    //TODO
     @GetMapping("/comments/states")
     public Mono<Object> getcommentState(){
         return null;
@@ -35,13 +38,19 @@ public class CommentController {
     @PutMapping("/shops/{did}/comments/{id}/confirm")
     public Mono<Object> auditComment(@LoginUser Long userId,@PathVariable Long did,
                                      @PathVariable Long id,@RequestBody CommentVo commentVo){
-        return commentService.auditComment(id,commentVo).map(Common::getRetObject);
+        return commentService.auditComment(id,commentVo).map(ret->{
+            if(ret.getCode()== ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(ResponseCode.INTERNAL_SERVER_ERR);
+            }
+        });
     }
 
     @GetMapping("comments")
     public Mono<Object> showComment(@LoginUser Long userId,@RequestParam Integer page,
                                     @RequestParam Integer pageSize){
-        return commentService.showComment(userId,page,pageSize).map(Common::getRetObject);
+        return commentService.showComment(userId,page,pageSize).map(Common::getPageRetObject);
     }
 
     @GetMapping("/shops/{id}/comments/all")

@@ -3,12 +3,14 @@ package com.example.model.po;
 import com.example.model.vo.CouponActivityVo;
 import io.netty.util.internal.StringUtil;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
 @Data
 @Table("coupon_activity")
+@NoArgsConstructor
 public class CouponActivityPo {
 
     Long id;
@@ -27,8 +29,6 @@ public class CouponActivityPo {
 
     Integer quantity;
 
-    Integer quantityType;
-
     Integer validTerm;
 
     String imageUrl;
@@ -43,12 +43,14 @@ public class CouponActivityPo {
 
     LocalDateTime gmtModified;
 
+    Integer quantitiyType;
+
     public CouponActivityPo(Long shopId,CouponActivityVo couponActivityVo){
         this.shopId=shopId;
 
         name=couponActivityVo.getName();
         quantity=couponActivityVo.getQuantity();
-        quantityType=couponActivityVo.getQuantityType();
+        quantitiyType=couponActivityVo.getQuantityType();
         validTerm=couponActivityVo.getValidTerm();
         beginTime=LocalDateTime.parse(couponActivityVo.getBeginTime());
         endTime=LocalDateTime.parse(couponActivityVo.getEndTime());
@@ -63,7 +65,7 @@ public class CouponActivityPo {
             quantity=couponActivityVo.getQuantity();
         }
         if(!StringUtil.isNullOrEmpty(String.valueOf(couponActivityVo.getQuantityType()))){
-            quantityType=couponActivityVo.getQuantityType();
+            quantitiyType=couponActivityVo.getQuantityType();
         }
         if(!StringUtil.isNullOrEmpty(String.valueOf(couponActivityVo.getValidTerm()))){
             validTerm=couponActivityVo.getValidTerm();

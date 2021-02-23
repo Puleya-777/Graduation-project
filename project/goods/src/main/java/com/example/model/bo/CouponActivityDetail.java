@@ -17,12 +17,6 @@ public class CouponActivityDetail implements VoObject {
 
     Shop shop;
 
-    LocalDateTime beginTime;
-
-    LocalDateTime endTime;
-
-    LocalDateTime couponTime;
-
     Integer quantity;
 
     Integer quantityType;
@@ -31,18 +25,42 @@ public class CouponActivityDetail implements VoObject {
 
     String imageUrl;
 
+    String beginTime;
+
+    String endTime;
+
+    String couponTime;
+
     String strategy;
 
     User createdBy;
 
-    User modiBy;
+    User ModiBy;
 
-    LocalDateTime gmtCreate;
+    String gmtCreate;
 
-    LocalDateTime gmtModified;
+    String gmtModified;
 
-    public CouponActivityDetail(CouponActivityPo couponActivityPo,Shop shop,User createdBy,User modiBy){
-
+    public CouponActivityDetail(CouponActivityPo couponActivityPo){
+        id=couponActivityPo.getId();
+        name=couponActivityPo.getName();
+        state=couponActivityPo.getState();
+        shop=new Shop();
+        shop.setId(couponActivityPo.getShopId());
+        quantity=couponActivityPo.getQuantity();
+        quantityType=couponActivityPo.getQuantitiyType();
+        validTerm=couponActivityPo.getValidTerm();
+        imageUrl=couponActivityPo.getImageUrl();
+        beginTime=couponActivityPo.getBeginTime().toString();
+        endTime=couponActivityPo.getEndTime().toString();
+        couponTime=couponActivityPo.getCouponTime().toString();
+        strategy=couponActivityPo.getStrategy();
+        createdBy=new User();
+        createdBy.setId(couponActivityPo.getCreatedBy());
+        ModiBy=new User();
+        ModiBy.setId(couponActivityPo.getModiBy());
+        gmtCreate=couponActivityPo.getCreatedBy().toString();
+        gmtModified=couponActivityPo.getGmtModified().toString();
     }
 
     @Override

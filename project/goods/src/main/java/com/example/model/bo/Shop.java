@@ -1,10 +1,13 @@
 package com.example.model.bo;
 
+import com.example.model.VoObject;
 import com.example.model.po.ShopPo;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class Shop {
+@NoArgsConstructor
+public class Shop implements VoObject {
 
     Long id;
 
@@ -15,4 +18,13 @@ public class Shop {
         name=shopPo.getName();
     }
 
+    @Override
+    public Object createVo() {
+        return null;
+    }
+
+    @Override
+    public Object createSimpleVo() {
+        return null;
+    }
 }

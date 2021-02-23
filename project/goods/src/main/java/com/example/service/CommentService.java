@@ -5,8 +5,10 @@ import com.example.model.bo.Comment;
 import com.example.model.po.CommentPo;
 import com.example.model.vo.CommentVo;
 import com.example.repository.CommentRepository;
+import com.example.util.NacosHelp;
 import com.example.util.ReturnObject;
 import com.github.pagehelper.PageInfo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -18,18 +20,28 @@ import java.util.stream.Collectors;
 @Service
 public class CommentService {
 
+    //TODO 查询user模块用id查user，这些函数都需要
+
     @Resource
     CommentRepository commentRepository;
+    @Autowired
+    NacosHelp nacosHelp;
 
-
+    //TODO 要查询下订单那边用户是否买了该商品，没买要返回903 用户没有购买此商品
     public Mono<ReturnObject> addSkuComment(Long orderItemId, CommentVo commentVo) {
         CommentPo commentPo=new CommentPo(commentVo);
-        return commentRepository.save(commentPo).map(Comment::new).map(ReturnObject::new);
+        return commentRepository.save(commentPo).map(Comment::new).map(comment -> {
+            comment.setCustomer(nacosHelp.findUserById(comment.getCustomer().getId()));
+            return comment;
+        }).map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> getSkuComment(Long id, Integer page, Integer pageSize) {
         Mono<List<Comment>> comments=commentRepository.findAllByGoodsSkuId(id).filter(commentPo -> commentPo.getState()==1)
-                .map(Comment::new).collect(Collectors.toList());
+                .map(Comment::new).map(comment -> {
+                    comment.setCustomer(nacosHelp.findUserById(comment.getCustomer().getId()));
+                    return comment;
+                }).collect(Collectors.toList());
         return comments.map(commentList -> {
                     PageInfo<Comment> retPage=new PageInfo<>(commentList);
                     retPage.setPages(page);
@@ -55,7 +67,10 @@ public class CommentService {
 
     public Mono<ReturnObject> showComment(Long userId, Integer page, Integer pageSize) {
         return commentRepository.findAllByCustomerId(userId).map(Comment::new)
-                .collect(Collectors.toList()).map(comments -> {
+                .map(comment -> {
+            comment.setCustomer(nacosHelp.findUserById(comment.getCustomer().getId()));
+            return comment;
+        }).collect(Collectors.toList()).map(comments -> {
                     PageInfo<Comment> retPage=new PageInfo<>(comments);
                     retPage.setPages(page);
                     retPage.setPageNum(page);
@@ -67,7 +82,10 @@ public class CommentService {
 
     public Mono<ReturnObject> showUnAuditComments(Long userId, Long id, Integer state,Integer page,Integer pageSize) {
         return commentRepository.findAll().filter(commentPo->commentPo.getState()==state)
-                .map(Comment::new).collect(Collectors.toList()).map(comments->{
+                .map(Comment::new).map(comment -> {
+                    comment.setCustomer(nacosHelp.findUserById(comment.getCustomer().getId()));
+                    return comment;
+                }).collect(Collectors.toList()).map(comments->{
                     PageInfo<Comment> retPage=new PageInfo<>(comments);
                     retPage.setPages(page);
                     retPage.setPageNum(page);
