@@ -2,12 +2,14 @@ package demo.address.service;
 
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import demo.address.model.po.AddressPo;
 import demo.address.model.po.RegionPo;
 import demo.address.model.vo.NewAddressVo;
 import demo.address.model.vo.NewRegionVo;
+import demo.address.model.vo.ReturnAddressVo;
 import demo.address.repository.AddressRepository;
 import demo.address.repository.RegionRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,8 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author chei1
@@ -32,18 +36,23 @@ public class AddressService {
 
     private static Integer MAX_ADDRESS_COUNT=20;
 
-    /**
-     * TODO 分页后无法显示具体list
-     * @param customerId
-     * @param page
-     * @param pageSize
-     * @return
-     */
-    public Mono<ReturnObject> getAddress(Long customerId, Integer page, Integer pageSize){
-        return addressRepository.findAllByCustomerId(customerId).collectList().map(it->{
-            PageHelper.startPage(page, pageSize);
-            PageInfo<AddressPo> addressPage=new PageInfo<>(it);
-            return new ReturnObject(addressPage);
+    public Mono getAddress(Long customerId, Integer pageNum, Integer pageSize){
+        return addressRepository.findAllByCustomerId(customerId).flatMap(po->{
+            ReturnAddressVo vo=new ReturnAddressVo(po);
+            return getAncestor(po.getRegionId()).map(regionList->{
+               vo.setRegionList(regionList);
+               return vo;
+            });
+        }).collectList().map(it->{
+            Page page = new Page(pageNum, pageSize);
+            int total = it.size();
+            page.setTotal(total);
+            int startIndex = Math.min((pageNum - 1) * pageSize,total);
+            int endIndex = Math.min(startIndex + pageSize,total);
+            log.info("s:"+startIndex+"  e:"+endIndex);
+            page.addAll(it.subList(startIndex,endIndex));
+            PageInfo<ReturnAddressVo> retPage=new PageInfo(page);
+            return new ReturnObject(retPage);
         });
     }
 
@@ -166,5 +175,26 @@ public class AddressService {
                 return new ReturnObject(ResponseCode.RESOURCE_ID_NOTEXIST);
             });
         }).defaultIfEmpty(new ReturnObject(ResponseCode.RESOURCE_ID_NOTEXIST));
+    }
+
+    public Mono<List> getAncestor(Long id){
+        return Mono.just(id).flatMap(tt->{
+            ArrayList<Long> list=new ArrayList<>();
+            for (int i=0;i<6;i++){
+                Long tid=id/longValue(Math.pow(10,i))*longValue(Math.pow(10,i));
+                list.add(tid);
+            }
+            return regionRepository.findAllByIdIn(list).collectList().map(it->{
+                if(it!=null){
+                    return it;
+                }
+                return null;
+            });
+        });
+    }
+
+    public Long longValue(Double a){
+        String str=a.toString();
+        return Long.valueOf(str.substring(0,str.indexOf(".")));
     }
 }

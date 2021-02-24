@@ -2,6 +2,9 @@ package demo.advertise.service;
 
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageInfo;
+import demo.address.model.vo.ReturnAddressVo;
 import demo.util.OssFileUtil;
 import demo.advertise.model.po.AdvertisePo;
 import demo.advertise.model.vo.ModifiedAdVo;
@@ -183,7 +186,17 @@ public class AdvertiseService {
         }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
     }
 
-    public Mono getAdByTime(Long segId){
-        return advertiseRepository.findAllBySegId(segId).collectList().map(it-> new ReturnObject(it));
+    public Mono getAdByTime(Long segId,Integer pageNum,Integer pageSize){
+        return advertiseRepository.findAllBySegId(segId).collectList().map(it-> {
+            Page page = new Page(pageNum, pageSize);
+            int total = it.size();
+            page.setTotal(total);
+            int startIndex = Math.min((pageNum - 1) * pageSize,total);
+            int endIndex = Math.min(startIndex + pageSize,total);
+            log.info("s:"+startIndex+"  e:"+endIndex);
+            page.addAll(it.subList(startIndex,endIndex));
+            PageInfo<AdvertisePo> retPage=new PageInfo(page);
+            return new ReturnObject(retPage);
+        });
     }
 }

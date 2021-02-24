@@ -3,6 +3,7 @@ package demo.address.controller;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
+import demo.address.model.po.RegionPo;
 import demo.address.model.vo.NewAddressVo;
 import demo.address.model.vo.NewRegionVo;
 import demo.address.repository.RegionRepository;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author chei1
@@ -27,20 +30,48 @@ public class AddressController {
     @Autowired
     AddressService addressService;
 
+    private static ArrayList<Long> Municipality=new ArrayList<>();
+
+    static {
+        Municipality.add(110000L);
+        Municipality.add(120000L);
+        Municipality.add(310000L);
+        Municipality.add(500000L);
+    }
+    /**
+     * 查询某个地区的所有子级地区
+     */
+    @GetMapping("region/{id}/descendant")
+    //@Audit
+    public Mono<ReturnObject> getDescendant(@PathVariable Long id){
+        return Mono.just(id).flatMap(aa->{
+            Long tid;
+            if (Municipality.contains(id)){
+                tid=id+100;
+            }else {
+                tid=id;
+            }
+            return regionRepository.findAllByPid(tid).collectList().map(it-> {
+                log.info("find by pid:"+tid);
+                if(it.size()!=0){
+                    return new ReturnObject<>(it);
+                }
+                return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
+            });
+        });
+    }
     /**
      * 查询某个地区的所有上级地区
      */
     @GetMapping("region/{id}/ancestor")
     //@Audit
     public Mono<ReturnObject> getAncestor(@PathVariable Long id){
-        return regionRepository.findAllByPid(id).collectList().map(it-> {
-            log.info("find by pid:"+id);
-          if(it.size()!=0){
-              return new ReturnObject<>(it);
-          }
-          return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
+        return addressService.getAncestor(id).map(it->{
+            return new ReturnObject(it);
         });
     }
+
+
 
     /**
      * TODO 解析token获取customId；
@@ -48,10 +79,10 @@ public class AddressController {
      */
     @GetMapping("addresses")
     //@Audit
-    public Mono getAddress(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer pageSize){
+    public Mono getAddress(@RequestParam(defaultValue = "1") Integer page, @RequestParam(defaultValue = "10") Integer pageSize){
         page = (page == null)?1:page;
         pageSize = (pageSize == null)?10:pageSize;
-        return addressService.getAddress(101L,page,pageSize).map(Common::getPageRetObject);
+        return addressService.getAddress(101L,page,pageSize);
     }
 
     /**
@@ -94,28 +125,31 @@ public class AddressController {
     }
 
     /**
-     * 管理员在地区下新增子地区
+     * 屏蔽管理员接口
      */
-    @PostMapping("shops/{did}/regions/{id}/subregions")
-    public Mono newRegion(@PathVariable Long did, @PathVariable Long id, @RequestBody NewRegionVo vo){
-        return addressService.newRegion(did,id,vo);
-    }
-
-    /**
-     * 管理员修改某个地区
-     */
-    @PutMapping("shops/{did}/regions/{id}")
-    public Mono modifiedRegion(@PathVariable Long did, @PathVariable Long id, @RequestBody NewRegionVo vo){
-        return addressService.modifiedRegion(did, id, vo);
-    }
-
-    /**
-     * 管理员让某个地区无效
-     */
-    @DeleteMapping("shops/{did}/regions/{id}")
-    public Mono deleteRegion(@PathVariable Long did, @PathVariable Long id){
-        return addressService.deleteRegion(did, id);
-    }
+//    /**
+//     * 管理员在地区下新增子地区
+//     */
+//    @PostMapping("shops/{did}/regions/{id}/subregions")
+//    public Mono newRegion(@PathVariable Long did, @PathVariable Long id, @RequestBody NewRegionVo vo){
+//        return addressService.newRegion(did,id,vo);
+//    }
+//
+//    /**
+//     * 管理员修改某个地区
+//     */
+//    @PutMapping("shops/{did}/regions/{id}")
+//    public Mono modifiedRegion(@PathVariable Long did, @PathVariable Long id, @RequestBody NewRegionVo vo){
+//        return addressService.modifiedRegion(did, id, vo);
+//    }
+//
+//    /**
+//     * 管理员让某个地区无效
+//     */
+//    @DeleteMapping("shops/{did}/regions/{id}")
+//    public Mono deleteRegion(@PathVariable Long did, @PathVariable Long id){
+//        return addressService.deleteRegion(did, id);
+//    }
 
 
 
