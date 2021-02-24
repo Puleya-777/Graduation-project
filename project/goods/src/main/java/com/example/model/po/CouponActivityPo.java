@@ -4,6 +4,7 @@ import com.example.model.vo.CouponActivityVo;
 import io.netty.util.internal.StringUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 public class CouponActivityPo {
 
+    @Id
     Long id;
 
     String name;

@@ -3,6 +3,7 @@ package com.example.model.po;
 import com.example.model.vo.FloatPriceVo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Table("float_price")
 public class FloatPricePo {
 
+    @Id
     Long id;
 
     Long goodsSkuId;

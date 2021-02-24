@@ -30,10 +30,13 @@ public class GrouponDetail implements VoObject {
     public GrouponDetail(GrouponActivityPo grouponActivityPo){
         id=grouponActivityPo.getId();
         name=grouponActivityPo.getName();
+
         goodsSpu=new GoodsSpu();
         goodsSpu.setId(grouponActivityPo.getGoodsSpuId());
+
         shop=new Shop();
         shop.setId(grouponActivityPo.getShopId());
+
         strategy=grouponActivityPo.getStrategy();
         state=grouponActivityPo.getState();
         beginTime=grouponActivityPo.getBeginTime().toString();

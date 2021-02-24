@@ -1,6 +1,7 @@
 package com.example.model.po;
 
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Table("coupon")
 public class CouponPo {
 
+    @Id
     Long id;
 
     String couponSn;

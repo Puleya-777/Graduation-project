@@ -14,7 +14,7 @@ public class CommonUtil<T> {
         retPage.setPages(page);
         retPage.setPageNum(page);
         retPage.setPageSize(pageSize);
-        retPage.setTotal(pageSize);
+        retPage.setTotal(list.size());
         return retPage;
     }
 
