@@ -56,7 +56,8 @@ public class CouponController {
 
     @GetMapping("/shops/{id}/couponactivities/invalid")
     public Mono<Object> showOwnInvalidcouponactivities(@LoginUser Long userId,@PathVariable Long id,
-                                                       @RequestParam(required = false,defaultValue = "1") Integer page,@RequestParam(required = false,defaultValue = "1") Integer pageSize){
+                                                       @RequestParam(required = false,defaultValue = "1") Integer page,
+                                                       @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return couponService.showOwnInvalidcouponactivities(id,page,pageSize).map(Common::getPageRetObject);
     }
 
