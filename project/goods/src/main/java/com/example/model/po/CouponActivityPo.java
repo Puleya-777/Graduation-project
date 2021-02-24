@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Table("coupon_activity")
@@ -52,8 +53,11 @@ public class CouponActivityPo {
         quantity=couponActivityVo.getQuantity();
         quantitiyType=couponActivityVo.getQuantityType();
         validTerm=couponActivityVo.getValidTerm();
-        beginTime=LocalDateTime.parse(couponActivityVo.getBeginTime());
-        endTime=LocalDateTime.parse(couponActivityVo.getEndTime());
+
+        DateTimeFormatter df=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        beginTime=LocalDateTime.parse(couponActivityVo.getBeginTime(),df);
+        endTime=LocalDateTime.parse(couponActivityVo.getEndTime(),df);
         strategy=couponActivityVo.getStrategy();
     }
 
@@ -70,11 +74,14 @@ public class CouponActivityPo {
         if(!StringUtil.isNullOrEmpty(String.valueOf(couponActivityVo.getValidTerm()))){
             validTerm=couponActivityVo.getValidTerm();
         }
+
+        DateTimeFormatter df=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         if(!StringUtil.isNullOrEmpty(couponActivityVo.getBeginTime())){
-            beginTime=LocalDateTime.parse(couponActivityVo.getBeginTime());
+            beginTime=LocalDateTime.parse(couponActivityVo.getBeginTime(),df);
         }
         if(!StringUtil.isNullOrEmpty(couponActivityVo.getEndTime())){
-            endTime=LocalDateTime.parse(couponActivityVo.getEndTime());
+            endTime=LocalDateTime.parse(couponActivityVo.getEndTime(),df);
         }
         if(!StringUtil.isNullOrEmpty(couponActivityVo.getStrategy())){
             strategy=couponActivityVo.getStrategy();

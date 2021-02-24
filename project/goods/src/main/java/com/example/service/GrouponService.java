@@ -49,9 +49,9 @@ public class GrouponService {
     }
 
     public Mono<ReturnObject> queryGroupon(Long spuId, Long id, Integer state, String beginTime, String endTime, Integer page, Integer pageSize) {
-//        DateTimeFormatter df=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime begin=LocalDateTime.parse(beginTime);
-        LocalDateTime end=LocalDateTime.parse(endTime);
+        DateTimeFormatter df=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime begin=LocalDateTime.parse(beginTime,df);
+        LocalDateTime end=LocalDateTime.parse(endTime,df);
         return grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,id)
                 .filter(grouponActivityPo -> grouponActivityPo.getState()==state
                             &&grouponActivityPo.getEndTime().isAfter(LocalDateTime.now())
