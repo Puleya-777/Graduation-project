@@ -28,10 +28,6 @@ public class GrouponService {
     @Autowired
     CommonUtil commonUtil;
 
-    public Mono<ReturnObject> getGrouponState() {
-        return grouponRepository.findAll().map(grouponActivityPo -> grouponActivityPo.getState())
-                .distinct().collect(Collectors.toList()).map(ReturnObject::new);
-    }
 
     public Mono<ReturnObject> queryGroupons(Long spuId, Long shopId, Integer timeline, Integer page, Integer pageSize) {
         return grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,shopId)

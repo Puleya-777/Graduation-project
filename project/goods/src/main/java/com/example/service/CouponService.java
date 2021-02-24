@@ -37,10 +37,6 @@ public class CouponService {
     @Autowired
     CommonUtil commonUtil;
 
-    public Mono<ReturnObject> getCouponState() {
-        return couponRepository.findAll().map(couponPo -> couponPo.getState())
-                .distinct().collect(Collectors.toList()).map(ReturnObject::new);
-    }
 
     public Mono<ReturnObject> addCouponActivity(Long userId, Long shopId, CouponActivityVo couponActivityVo) {
         CouponActivityPo couponActivityPo=new CouponActivityPo(shopId,couponActivityVo);

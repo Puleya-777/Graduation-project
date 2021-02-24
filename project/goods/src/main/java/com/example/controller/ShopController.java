@@ -1,15 +1,23 @@
 package com.example.controller;
 
 import com.example.annotation.LoginUser;
+import com.example.model.state.GrouponState;
+import com.example.model.state.GrouponStateVo;
+import com.example.model.state.ShopState;
+import com.example.model.state.ShopStateVo;
 import com.example.model.vo.AuditShopVo;
 import com.example.model.vo.ShopVo;
 import com.example.service.ShopService;
 import com.example.util.Common;
 import com.example.util.ResponseUtil;
+import com.example.util.ReturnObject;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class ShopController {
@@ -20,7 +28,12 @@ public class ShopController {
 
     @GetMapping("/shops/states")
     public Mono<Object> getshopState(){
-        return shopService.getshopState().map(Common::getRetObject);
+        ShopState[] states= ShopState.class.getEnumConstants();
+        List<ShopStateVo> ShopStateVos =new ArrayList<ShopStateVo>();
+        for(int i=0;i<states.length;i++){
+            ShopStateVos.add(new ShopStateVo(states[i]));
+        }
+        return Mono.just(ResponseUtil.ok(new ReturnObject<List>(ShopStateVos).getData()));
     }
 
     @PostMapping("/shops")

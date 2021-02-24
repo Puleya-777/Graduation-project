@@ -19,11 +19,6 @@ public class ShopService {
     @Autowired
     ShopRepository shopRepository;
 
-    public Mono<ReturnObject> getshopState() {
-        return shopRepository.findAll().map(shopPo -> shopPo.getState())
-                .distinct().collect(Collectors.toList()).map(ReturnObject::new);
-    }
-
     public Mono<ReturnObject> addShop(ShopVo shopVo) {
         ShopPo shopPo=new ShopPo(shopVo);
         shopPo.setState(1);

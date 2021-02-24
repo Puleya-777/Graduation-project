@@ -1,16 +1,22 @@
 package com.example.controller;
 
 import com.example.annotation.LoginUser;
+import com.example.model.state.CouponState;
+import com.example.model.state.CouponStateVo;
+import com.example.model.state.SpuState;
+import com.example.model.state.SpuStateVo;
 import com.example.model.vo.CouponActivityVo;
 import com.example.service.CouponService;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ResponseUtil;
+import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -21,7 +27,12 @@ public class CouponController {
 
     @GetMapping("/coupons/states")
     public Mono<Object> getCouponState(){
-        return couponService.getCouponState().map(Common::getRetObject);
+        CouponState[] states= CouponState.class.getEnumConstants();
+        List<CouponStateVo> CouponStateVos =new ArrayList<CouponStateVo>();
+        for(int i=0;i<states.length;i++){
+            CouponStateVos.add(new CouponStateVo(states[i]));
+        }
+        return Mono.just(ResponseUtil.ok(new ReturnObject<List>(CouponStateVos).getData()));
     }
 
     @PostMapping("/shops/{shopId}/couponactivities")

@@ -31,7 +31,7 @@ public class Shop implements VoObject {
 
     @Override
     public Object createVo() {
-        return null;
+        return this;
     }
 
     @Override

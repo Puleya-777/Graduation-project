@@ -27,7 +27,7 @@ public class Category implements VoObject {
 
     @Override
     public Object createVo() {
-        return null;
+        return this;
     }
 
     @Override

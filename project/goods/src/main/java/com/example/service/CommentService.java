@@ -42,6 +42,7 @@ public class CommentService {
                     comment.setCustomer(nacosHelp.findUserById(comment.getCustomer().getId()));
                     return comment;
                 }).collect(Collectors.toList());
+        System.out.println(comments.block());
         return comments.map(commentList -> {
                     PageInfo<Comment> retPage=new PageInfo<>(commentList);
                     retPage.setPages(page);

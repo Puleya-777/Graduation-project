@@ -1,14 +1,22 @@
 package com.example.controller;
 
 import com.example.annotation.LoginUser;
+import com.example.model.state.CommentState;
+import com.example.model.state.CommentStateVo;
+import com.example.model.state.GrouponState;
+import com.example.model.state.GrouponStateVo;
 import com.example.model.vo.GrouponVo;
 import com.example.service.GrouponService;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ResponseUtil;
+import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class GrouponController {
@@ -18,7 +26,12 @@ public class GrouponController {
 
     @GetMapping("/groupons/states")
     public Mono<Object> getGrouponState(){
-        return grouponService.getGrouponState().map(Common::getRetObject);
+        GrouponState[] states= GrouponState.class.getEnumConstants();
+        List<GrouponStateVo> GrouponStateVos =new ArrayList<GrouponStateVo>();
+        for(int i=0;i<states.length;i++){
+            GrouponStateVos.add(new GrouponStateVo(states[i]));
+        }
+        return Mono.just(ResponseUtil.ok(new ReturnObject<List>(GrouponStateVos).getData()));
     }
 
     @GetMapping("/groupons")

@@ -44,7 +44,7 @@ public class GrouponDetail implements VoObject {
 
     @Override
     public Object createVo() {
-        return null;
+        return this;
     }
 
     @Override

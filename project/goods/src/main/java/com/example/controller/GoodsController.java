@@ -5,6 +5,10 @@ import com.example.model.po.BrandPo;
 import com.example.model.po.CategoryPo;
 import com.example.model.po.FloatPricePo;
 import com.example.model.po.SkuPo;
+import com.example.model.state.CommentState;
+import com.example.model.state.CommentStateVo;
+import com.example.model.state.SpuState;
+import com.example.model.state.SpuStateVo;
 import com.example.model.vo.*;
 import com.example.service.BrandService;
 import com.example.service.CategoryService;
@@ -18,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/goods")
@@ -45,7 +51,12 @@ public class GoodsController {
     })
     @GetMapping("/skus/states")
     public Mono<Object> getGoodsSpuStatus(){
-        return Mono.just(States.goodsState);
+        SpuState[] states= SpuState.class.getEnumConstants();
+        List<SpuStateVo> SpuStateVos =new ArrayList<SpuStateVo>();
+        for(int i=0;i<states.length;i++){
+            SpuStateVos.add(new SpuStateVo(states[i]));
+        }
+        return Mono.just(ResponseUtil.ok(new ReturnObject<List>(SpuStateVos).getData()));
     }
 
     /**

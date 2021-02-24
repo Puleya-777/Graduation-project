@@ -1,14 +1,21 @@
 package com.example.controller;
 
 import com.example.annotation.LoginUser;
+import com.example.model.bo.Comment;
+import com.example.model.state.CommentState;
 import com.example.model.vo.CommentVo;
+import com.example.model.state.CommentStateVo;
 import com.example.service.CommentService;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ResponseUtil;
+import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/comment")
@@ -20,7 +27,12 @@ public class CommentController {
     //TODO
     @GetMapping("/comments/states")
     public Mono<Object> getcommentState(){
-        return null;
+        CommentState[] states= CommentState.class.getEnumConstants();
+        List<CommentStateVo> commentStateVos =new ArrayList<CommentStateVo>();
+        for(int i=0;i<states.length;i++){
+            commentStateVos.add(new CommentStateVo(states[i]));
+        }
+        return Mono.just(ResponseUtil.ok(new ReturnObject<List>(commentStateVos).getData()));
     }
 
     @PostMapping("/orderitems/{id}/comments")

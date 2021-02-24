@@ -28,11 +28,14 @@ public class Coupon implements VoObject {
 
     @Override
     public Object createVo() {
-        return null;
+        return this;
     }
 
     @Override
     public Object createSimpleVo() {
         return null;
     }
+
+
+
 }
