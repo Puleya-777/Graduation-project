@@ -160,8 +160,8 @@ public class AdvertiseController {
      * TODO 验证是否为管理员
      */
     @GetMapping("/shops/{did}/timesegments/{id}/advertisement")
-    public Mono getAdByTime(@PathVariable Long did, @PathVariable Long id){
-        return advertiseService.getAdByTime(id);
+    public Mono getAdByTime(@PathVariable Long did, @PathVariable Long id,@RequestParam(defaultValue = "1") Integer page,@RequestParam(defaultValue = "10") Integer pageSize){
+        return advertiseService.getAdByTime(id,page,pageSize);
     }
 
 
