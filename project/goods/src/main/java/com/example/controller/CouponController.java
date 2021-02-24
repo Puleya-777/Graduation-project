@@ -49,19 +49,20 @@ public class CouponController {
 
     @GetMapping("/couponactivities")
     public Mono<Object> showOwncouponactivities(@RequestParam Long shopId,@RequestParam Integer timeline,
-                                                @RequestParam Integer page,@RequestParam Integer pageSize){
+                                                @RequestParam(required = false,defaultValue = "1") Integer page,
+                                                @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return couponService.showOwncouponactivities(shopId,timeline,page,pageSize).map(Common::getPageRetObject);
     }
 
     @GetMapping("/shops/{id}/couponactivities/invalid")
     public Mono<Object> showOwnInvalidcouponactivities(@LoginUser Long userId,@PathVariable Long id,
-                                                       @RequestParam Integer page,@RequestParam Integer pageSize){
+                                                       @RequestParam(required = false,defaultValue = "1") Integer page,@RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return couponService.showOwnInvalidcouponactivities(id,page,pageSize).map(Common::getPageRetObject);
     }
 
     @GetMapping("/couponactivities/{id}/skus")
-    public Mono<Object> getCouponSku(@PathVariable Long id,@RequestParam Integer page,
-                                     @RequestParam Integer pageSize){
+    public Mono<Object> getCouponSku(@PathVariable Long id,@RequestParam(required = false,defaultValue = "1") Integer page,
+                                     @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return couponService.getCouponSku(id,page,pageSize).map(Common::getPageRetObject);
     }
 
@@ -104,7 +105,7 @@ public class CouponController {
 
     @GetMapping("/coupons")
     public Mono<Object> showCoupons(@LoginUser Long userId,@RequestParam Integer state,
-                                    @RequestParam Integer page,@RequestParam Integer pageSize){
+                                    @RequestParam(required = false,defaultValue = "1") Integer page,@RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return couponService.showCoupons(userId,state,page,pageSize).map(Common::getRetObject);
     }
 

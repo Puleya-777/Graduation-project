@@ -37,8 +37,8 @@ public class GrouponController {
     @GetMapping("/groupons")
     public Mono<Object> queryGroupons(@LoginUser Long userId,@RequestParam Integer timeline,
                                       @RequestParam Long spuId,@RequestParam Long shopId,
-                                      @RequestParam(required = false) Integer page,
-                                      @RequestParam(required = false) Integer pageSize){
+                                      @RequestParam(required = false,defaultValue = "1") Integer page,
+                                      @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return grouponService.queryGroupons(spuId,shopId,timeline,page,pageSize).map(Common::getPageRetObject);
     }
 
@@ -46,7 +46,8 @@ public class GrouponController {
     public Mono<Object> queryGroupon(@LoginUser Long userId, @PathVariable Long id,
                                      @RequestParam Long spuId,@RequestParam String beginTime,
                                      @RequestParam String endTime,@RequestParam Integer state,
-                                     @RequestParam Integer page,@RequestParam Integer pageSize){
+                                     @RequestParam(required = false,defaultValue = "1") Integer page,
+                                     @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return grouponService.queryGroupon(spuId,id,state,beginTime,endTime,page,pageSize).map(Common::getPageRetObject);
     }
 

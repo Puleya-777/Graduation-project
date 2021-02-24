@@ -42,8 +42,9 @@ public class CommentController {
     }
 
     @GetMapping("/skus/{id}/comments")
-    public Mono<Object> getSkuComment(@PathVariable Long id,@RequestParam Integer page,
-                                      @RequestParam Integer pageSize){
+    public Mono<Object> getSkuComment(@PathVariable Long id,
+                                      @RequestParam(required = false,defaultValue = "1") Integer page,
+                                      @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return commentService.getSkuComment(id,page,pageSize).map(Common::getPageRetObject);
     }
 
@@ -60,8 +61,8 @@ public class CommentController {
     }
 
     @GetMapping("comments")
-    public Mono<Object> showComment(@LoginUser Long userId,@RequestParam Integer page,
-                                    @RequestParam Integer pageSize){
+    public Mono<Object> showComment(@LoginUser Long userId,@RequestParam(required = false,defaultValue = "1") Integer page,
+                                    @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return commentService.showComment(userId,page,pageSize).map(Common::getPageRetObject);
     }
 

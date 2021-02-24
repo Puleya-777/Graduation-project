@@ -71,8 +71,8 @@ public class GoodsController {
      */
     @GetMapping("/skus")
     public Mono<Object> querySku(@RequestParam Integer shopId,@RequestParam String skuSn,@RequestParam Long spuId,
-                                 @RequestParam String spuSn,@RequestParam(required = false) Integer page,
-                                 @RequestParam(required = false) Integer pageSize){
+                                 @RequestParam String spuSn,@RequestParam(required = false,defaultValue = "1") Integer page,
+                                 @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return goodsService.querySku(skuSn,spuId,page,pageSize).map(Common::getPageRetObject);
     }
 
@@ -390,8 +390,8 @@ public class GoodsController {
      * @return
      */
     @GetMapping("/brands")
-    public Mono<Object> queryBrand(@RequestParam(required = false) Integer page,
-                                   @RequestParam(required = false) Integer pageSize){
+    public Mono<Object> queryBrand(@RequestParam(required = false,defaultValue = "1") Integer page,
+                                   @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return brandService.queryAllBrand(page,pageSize).map(Common::getPageRetObject);
     }
 
