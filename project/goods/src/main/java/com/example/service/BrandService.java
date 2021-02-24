@@ -24,7 +24,7 @@ public class BrandService {
     BrandRepository brandRepository;
 
     public Mono<ReturnObject> addBrand(BrandPo brandPo) {
-        return brandRepository.save(brandPo).map(ReturnObject::new);
+        return brandRepository.save(brandPo).map(Brand::new).map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> queryAllBrand(Integer page, Integer pageSize) {
@@ -57,6 +57,13 @@ public class BrandService {
     }
 
     public Mono<ReturnObject> deleteBrand(Long id) {
-        return brandRepository.deleteBrandPoById(id).map(ReturnObject::new);
+        return brandRepository.findById(id).defaultIfEmpty(new BrandPo())
+                .flatMap(brandPo -> {
+                    if(brandPo.getId()==null){
+                        return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
+                    }else{
+                        return brandRepository.deleteBrandPoById(id);
+                    }
+                }).map(ReturnObject::new);
     }
 }

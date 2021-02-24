@@ -5,6 +5,7 @@ import com.example.model.vo.AuditShopVo;
 import com.example.model.vo.ShopVo;
 import com.example.service.ShopService;
 import com.example.util.Common;
+import com.example.util.ResponseUtil;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class ShopController {
     @PutMapping("/shops/{id}")
     public Mono<Object> modifyShop(@LoginUser Long userId,@PathVariable Long id,
                                    @RequestBody ShopVo shopVo){
-        return shopService.modifyShop(id,shopVo).map(Common::getRetObject);
+        return shopService.modifyShop(id,shopVo).map(ret-> ResponseUtil.ok());
     }
 
     @DeleteMapping("/shops/{id}")
@@ -41,16 +42,16 @@ public class ShopController {
     @PutMapping("/shops/{shopId}/newshops/{id}/audit")
     public Mono<Object> auditShop(@LoginUser Long userId, @PathVariable Long shopId,
                                   @PathVariable Long id, @RequestBody AuditShopVo auditShopVo){
-        return shopService.auditShop(shopId,id,auditShopVo);
+        return shopService.auditShop(shopId,id,auditShopVo).map(ret->ResponseUtil.ok());
     }
 
     @PutMapping("/shops/{id}/onshelves")
     public Mono<Object> onShelvesShop(@LoginUser Long userId,@PathVariable Long id){
-        return shopService.onShelvesShop(id).map(Common::getRetObject);
+        return shopService.onShelvesShop(id).map(ret->ResponseUtil.ok());
     }
 
     @PutMapping("/shops/{id}/offshelves")
     public Mono<Object> offShelvesShop(@LoginUser Long userId,@PathVariable Long id){
-        return shopService.offShelvesShop(id).map(Common::getRetObject);
+        return shopService.offShelvesShop(id).map(ret->ResponseUtil.ok());
     }
 }

@@ -3,7 +3,7 @@ package com.example.model.vo;
 import com.example.model.VoObject;
 import com.example.model.po.SkuPo;
 
-public class SimpleRetSku {
+public class SimpleRetSku implements VoObject{
 
     Long id;
 
@@ -32,4 +32,13 @@ public class SimpleRetSku {
         disable=skuPo.getDisabled();
     }
 
+    @Override
+    public Object createVo() {
+        return null;
+    }
+
+    @Override
+    public Object createSimpleVo() {
+        return null;
+    }
 }

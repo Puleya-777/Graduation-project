@@ -10,10 +10,7 @@ import com.example.service.BrandService;
 import com.example.service.CategoryService;
 import com.example.service.FloatPriceService;
 import com.example.service.GoodsService;
-import com.example.util.Common;
-import com.example.util.ResponseCode;
-import com.example.util.ReturnObject;
-import com.example.util.States;
+import com.example.util.*;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -127,7 +124,7 @@ public class GoodsController {
      */
     @DeleteMapping("/shops/{shopId}/skus/{id}")
     public Mono<Object> deleteSku(@LoginUser Long userId,@PathVariable Long skuId,@PathVariable Integer shopId){
-        return goodsService.deleteSku(skuId).map(Common::getRetObject);
+        return goodsService.deleteSku(skuId).map(returnObject -> ResponseUtil.ok());
     }
 
     /**
@@ -141,7 +138,7 @@ public class GoodsController {
     @PutMapping("/shops/{shopId}/skus/{id}")
     public Mono<Object> putSku(@LoginUser Long userId, @PathVariable Integer shopId,
                                @PathVariable Long skuId, @RequestBody SkuVo skuVo){
-        return goodsService.putSku(skuId,skuVo).map(Common::getRetObject);
+        return goodsService.putSku(skuId,skuVo).map(returnObject -> ResponseUtil.ok());
     }
 
     /**
@@ -151,7 +148,7 @@ public class GoodsController {
      */
     @GetMapping("/categories/{id}/subcategories")
     public Mono<Object> queryCategoryRelation(@PathVariable Long id){
-        return goodsService.queryCategoryRelation(id).map(Common::getRetObject);
+        return goodsService.queryCategoryRelation(id).map(Common::getListRetObject);
     }
 
     /**
@@ -179,7 +176,13 @@ public class GoodsController {
     @PutMapping("/shops/{shopId}/categories/{id}")
     public Mono<Object> modifyCategory(@LoginUser Long userId,@PathVariable Integer shopId,
                                        @PathVariable Long id,@RequestBody CategoryInfoVo vo){
-        return categoryService.addGoodsCategory(id,vo).map(Common::getRetObject);
+        return categoryService.modifyCategory(id,vo).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -192,9 +195,10 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/categories/{id}")
     public Mono<Object> deleteCategory(@LoginUser Integer userId,@PathVariable Integer shopId,
                                        @PathVariable Long id){
-        return categoryService.deleteCategory(id).map(Common::getRetObject);
+        return categoryService.deleteCategory(id).map(returnObject -> ResponseUtil.ok());
     }
 
+    //TODO
     /**
      * 查看一条商品SPU的详细信息（无需登录）
      * @param id
@@ -205,6 +209,7 @@ public class GoodsController {
         return goodsService.getSpuInfoById(id).map(Common::getRetObject);
     }
 
+    //TODO
     /**
      * 查看一条分享商品SPU的详细信息（需登录）
      * @param userId
@@ -239,9 +244,15 @@ public class GoodsController {
      * @return
      */
     @PutMapping("/shops/{shopId}/spus/{id}")
-    public Mono<Object> modifySpu(@LoginUser Long userId,@PathVariable Integer shopId,
-                                  @PathVariable Integer id,@RequestBody SpuVo spuVo){
-        return null;
+    public Mono<Object> modifySpu(@LoginUser Long userId,@PathVariable Long shopId,
+                                  @PathVariable Long id,@RequestBody SpuVo spuVo){
+        return goodsService.modifySpu(id,spuVo).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -252,8 +263,14 @@ public class GoodsController {
      * @return
      */
     @DeleteMapping("/shops/{shopId}/spus/{id}")
-    public Mono<Object> deleteSpu(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Integer id){
-        return null;
+    public Mono<Object> deleteSpu(@LoginUser Long userId,@PathVariable Long shopId,@PathVariable Long id){
+        return goodsService.deleteSpu(id).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -265,7 +282,13 @@ public class GoodsController {
      */
     @PutMapping("/shops/{shopId}/skus/{id}/onshelves")
     public Mono<Object> goodsOnShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
-        return goodsService.modifyGoodsState(id,0).map(Common::getRetObject);
+        return goodsService.modifyGoodsState(id,0).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -277,7 +300,13 @@ public class GoodsController {
      */
     @PutMapping("/shops/{shopId}/skus/{id}/offshelves")
     public Mono<Object> goodsOffShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
-        return goodsService.modifyGoodsState(id,1).map(Common::getRetObject);
+        return goodsService.modifyGoodsState(id,1).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -305,7 +334,13 @@ public class GoodsController {
      */
     @DeleteMapping("/shops/{shopId}/floatPrices/{id}")
     public Mono<Object> invalidFloatPrice(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
-        return floatPriceService.invalidFloatPrice(userId,id).map(Common::getRetObject);
+        return floatPriceService.invalidFloatPrice(userId,id).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -321,6 +356,8 @@ public class GoodsController {
         return brandService.addBrand(brandPo).map(Common::getRetObject);
     }
 
+
+    //TODO
     /**
      * 上传图片,如果该品牌有图片，需修改该品牌的图片，并删除图片文件
      * @param userId
@@ -344,7 +381,7 @@ public class GoodsController {
     @GetMapping("/brands")
     public Mono<Object> queryBrand(@RequestParam(required = false) Integer page,
                                    @RequestParam(required = false) Integer pageSize){
-        return brandService.queryAllBrand(page,pageSize).map(Common::getRetObject);
+        return brandService.queryAllBrand(page,pageSize).map(Common::getPageRetObject);
     }
 
     /**
@@ -358,7 +395,13 @@ public class GoodsController {
     @PutMapping("/shops/{shopId}/brands/{id}")
     public Mono<Object> modifyBrand(@LoginUser Long userId,@PathVariable Integer shopId,
                                     @PathVariable Long id,@RequestBody BrandVo brandVo){
-        return brandService.modifyBrand(id,brandVo).map(Common::getRetObject);
+        return brandService.modifyBrand(id,brandVo).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -371,7 +414,13 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/brands/{id}")
     public Mono<Object> deleteBrand(@LoginUser Long userId,@PathVariable Integer shopId,
                                     @PathVariable Long id){
-        return brandService.deleteBrand(id).map(Common::getRetObject);
+        return brandService.deleteBrand(id).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -386,7 +435,13 @@ public class GoodsController {
     @PostMapping("/shops/{shopId}/spus/{spuId}/categories/{id}")
     public Mono<Object> addSpuCategory(@LoginUser Long userId,@PathVariable Integer shopId,
                                        @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuCategory(spuId,id).map(Common::getRetObject);
+        return goodsService.addSpuCategory(spuId,id).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -400,7 +455,13 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/categories/{id}")
     public Mono<Object> removeSpuCategory(@LoginUser Long userId,@PathVariable Long shopId,
                                        @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuCategory(spuId,null).map(Common::getRetObject);
+        return goodsService.addSpuCategory(spuId,null).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -415,7 +476,13 @@ public class GoodsController {
     @PostMapping("/shops/{shopId}/spus/{spuId}/brands/{id}")
     public Mono<Object> addSpuBrand(@LoginUser Long userId,@PathVariable Long shopId,
                                     @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuBrand(spuId,id).map(Common::getRetObject);
+        return goodsService.addSpuBrand(spuId,id).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 
     /**
@@ -430,6 +497,12 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/brands/{id}")
     public Mono<Object> removeSpuBrand(@LoginUser Long userId,@PathVariable Long shopId,
                                     @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuBrand(spuId,null).map(Common::getRetObject);
+        return goodsService.addSpuBrand(spuId,null).map(returnObject -> {
+            if(returnObject.getCode()==ResponseCode.OK){
+                return ResponseUtil.ok();
+            }else {
+                return ResponseUtil.fail(returnObject.getCode());
+            }
+        });
     }
 }

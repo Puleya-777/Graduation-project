@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.model.bo.FloatPrice;
 import com.example.model.po.FloatPricePo;
 import com.example.repository.FloatPriceRepository;
 import com.example.util.ResponseCode;
@@ -18,6 +19,7 @@ public class FloatPriceService {
 
     public Mono<ReturnObject> addFloatingPrice(FloatPricePo floatPricePo) {
         return floatPriceRepository.save(floatPricePo).defaultIfEmpty(new FloatPricePo())
+                .map(FloatPrice::new)
                 .map(ReturnObject::new);
     }
 

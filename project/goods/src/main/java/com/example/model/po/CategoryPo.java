@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Table("goods_category")
 @Data
-public class CategoryPo {
+public class CategoryPo{
 
     @Id
     Long id;

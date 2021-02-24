@@ -8,6 +8,7 @@ import com.example.model.po.FloatPricePo;
 import com.example.model.po.SkuPo;
 import com.example.model.po.SpuPo;
 import com.example.model.vo.SkuVo;
+import com.example.model.vo.SpuVo;
 import com.example.repository.BrandRepository;
 import com.example.repository.CategoryRepository;
 import com.example.repository.SkuRepository;
@@ -155,5 +156,28 @@ public class GoodsService {
         });
 
 
+    }
+
+    public Mono<ReturnObject> modifySpu(Long id, SpuVo spuVo) {
+        return spuRepository.findById(id).defaultIfEmpty(new SpuPo()).flatMap(spuPo -> {
+            if(spuPo.getId()==null){
+                return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
+            }else{
+                spuPo.setName(spuVo.getName());
+                spuPo.setDetail(spuVo.getDescription());
+                spuPo.setSpec(spuVo.getSpecs());
+                return spuRepository.save(spuPo);
+            }
+        }).map(ReturnObject::new);
+    }
+
+    public Mono<ReturnObject> deleteSpu(Long id) {
+        return spuRepository.findById(id).defaultIfEmpty(new SpuPo()).flatMap(spuPo -> {
+            if(spuPo.getId()==null){
+                return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
+            }else{
+                return spuRepository.deleteById(id);
+            }
+        }).map(ReturnObject::new);
     }
 }

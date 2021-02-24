@@ -3,12 +3,14 @@ package com.example.model.po;
 import com.example.model.vo.GrouponVo;
 import io.netty.util.internal.StringUtil;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
 @Data
 @Table("groupon_activity")
+@NoArgsConstructor
 public class GrouponActivityPo {
 
     Long id;

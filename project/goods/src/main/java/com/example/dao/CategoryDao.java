@@ -1,5 +1,6 @@
 package com.example.dao;
 
+import com.example.model.bo.Category;
 import com.example.repository.CategoryRepository;
 import com.example.util.ReturnObject;
 import org.springframework.stereotype.Repository;
@@ -16,6 +17,6 @@ public class CategoryDao {
     CategoryRepository categoryRepository;
 
     public Mono<List> queryCategoryRelation(Long id) {
-        return categoryRepository.findAllByPid(id).collect(Collectors.toList());
+        return categoryRepository.findAllByPid(id).map(Category::new).collect(Collectors.toList());
     }
 }
