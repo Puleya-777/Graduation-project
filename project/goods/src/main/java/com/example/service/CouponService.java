@@ -99,7 +99,7 @@ public class CouponService {
     }
 
     public Mono<ReturnObject> deleteActivity(Long id) {
-        return couponActivityRepository.deleteById(id).map(ReturnObject::new);
+        return couponActivityRepository.deleteCouponActivityPoById(id).map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> addRangeOfActivity(Long shopId, Long activityId, List<Long> skus) {

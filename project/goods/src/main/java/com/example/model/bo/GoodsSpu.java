@@ -31,7 +31,8 @@ public class GoodsSpu {
         imageUrl=spuPo.getImageUrl();
         state=0;
         gmtCreate=spuPo.getGmtCreate().toString();
-        gmtModified=spuPo.getGmtModified().toString();
+        if(spuPo.getGmtModified()!=null)
+            gmtModified=spuPo.getGmtModified().toString();
         disable=spuPo.getDisabled();
     }
 

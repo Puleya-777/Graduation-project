@@ -21,8 +21,10 @@ public class Category implements VoObject {
         id=categoryPo.getId();
         name=categoryPo.getName();
         pid=categoryPo.getPid();
-        gmtCreate=categoryPo.getGmtCreate().toString();
-        gmtModified=categoryPo.getGmtModified().toString();
+        if(categoryPo.getGmtCreate()!=null)
+            gmtCreate=categoryPo.getGmtCreate().toString();
+        if(categoryPo.getGmtModified()!=null)
+            gmtModified=categoryPo.getGmtModified().toString();
     }
 
     @Override
