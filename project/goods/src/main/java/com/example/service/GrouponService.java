@@ -11,6 +11,7 @@ import com.example.util.ReturnObject;
 import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
@@ -54,8 +55,9 @@ public class GrouponService {
         LocalDateTime end=LocalDateTime.parse(endTime,df);
         return grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,id)
                 .filter(grouponActivityPo -> grouponActivityPo.getState()==state
-                            &&grouponActivityPo.getEndTime().isAfter(LocalDateTime.now())
-                            &&grouponActivityPo.getBeginTime().isBefore(LocalDateTime.now()))
+                            &&grouponActivityPo.getEndTime().isBefore(end)
+                            &&grouponActivityPo.getBeginTime().isAfter(begin))
+                .map(Groupon::new)
                 .collect(Collectors.toList())
                 .map(list->commonUtil.listToPage(list,page,pageSize))
                 .map(ReturnObject::new);
