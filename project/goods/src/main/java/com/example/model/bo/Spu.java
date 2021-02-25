@@ -1,14 +1,16 @@
 package com.example.model.bo;
 
+import com.example.model.VoObject;
 import com.example.model.po.SpuPo;
 import com.example.model.vo.SimpleRetSku;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class Spu {
+public class Spu implements VoObject {
 
     Long id;
 
@@ -28,7 +30,7 @@ public class Spu {
 
     String imageUrl;
 
-//    Spec spec;
+    String spec;
 
     List<SimpleRetSku> skuList;
 
@@ -47,11 +49,36 @@ public class Spu {
         goodsSn=spuPo.getGoodsSn();
         detail=spuPo.getDetail();
         imageUrl=spuPo.getImageUrl();
-//        spec=spuPo.getSpec();
+        spec=spuPo.getSpec();
 
         gmtCreate=spuPo.getGmtCreate();
         gmtModified=spuPo.getGmtModified();
         disable=spuPo.getDisabled();
     }
 
+    public Spu(SpuPo spuPo){
+        id=spuPo.getId();
+        name=spuPo.getName();
+        brand=new Brand();
+        category=new Category();
+        shop=new Shop();
+        freight=new Freight();
+        goodsSn=spuPo.getGoodsSn();
+        detail=spuPo.getDetail();
+        imageUrl=spuPo.getImageUrl();
+        spec=spuPo.getSpec();
+        skuList=new ArrayList<SimpleRetSku>();
+        gmtCreate=spuPo.getGmtCreate();
+        gmtModified=spuPo.getGmtModified()==null?null:spuPo.getGmtModified();
+    }
+
+    @Override
+    public Object createVo() {
+        return this;
+    }
+
+    @Override
+    public Object createSimpleVo() {
+        return null;
+    }
 }

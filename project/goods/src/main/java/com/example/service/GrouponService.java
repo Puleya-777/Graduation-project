@@ -1,10 +1,14 @@
 package com.example.service;
 
+import com.example.model.bo.GoodsSpu;
 import com.example.model.bo.Groupon;
 import com.example.model.bo.GrouponDetail;
+import com.example.model.bo.Shop;
 import com.example.model.po.GrouponActivityPo;
 import com.example.model.vo.GrouponVo;
 import com.example.repository.GrouponRepository;
+import com.example.repository.ShopRepository;
+import com.example.repository.SpuRepository;
 import com.example.util.CommonUtil;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
@@ -25,6 +29,10 @@ public class GrouponService {
 
     @Resource
     GrouponRepository grouponRepository;
+    @Resource
+    ShopRepository shopRepository;
+    @Resource
+    SpuRepository spuRepository;
 
     @Autowired
     CommonUtil commonUtil;
@@ -53,7 +61,13 @@ public class GrouponService {
         DateTimeFormatter df=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime begin=LocalDateTime.parse(beginTime,df);
         LocalDateTime end=LocalDateTime.parse(endTime,df);
-        return grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,id)
+        Flux<GrouponActivityPo> grouponActivityPoFlux;
+        if(spuId==null){
+            grouponActivityPoFlux=grouponRepository.findAllByShopId(id);
+        }else{
+            grouponActivityPoFlux=grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,id);
+        }
+        return grouponActivityPoFlux
                 .filter(grouponActivityPo -> grouponActivityPo.getState()==state
                             &&grouponActivityPo.getEndTime().isBefore(end)
                             &&grouponActivityPo.getBeginTime().isAfter(begin))
@@ -63,11 +77,21 @@ public class GrouponService {
                 .map(ReturnObject::new);
     }
 
-    //TODO 把id变对象
     public Mono<ReturnObject> createGrouponofSPU(Long shopId, Long id, GrouponVo grouponVo) {
-        return grouponRepository.save(new GrouponActivityPo(id,shopId,grouponVo))
-                .map(GrouponDetail::new)
-                .map(ReturnObject::new);
+        Mono<GrouponActivityPo> grouponActivityPoMono=grouponRepository.save(new GrouponActivityPo(id,shopId,grouponVo));
+        Mono<Shop> shopMono=grouponActivityPoMono.flatMap(grouponActivityPo ->
+                shopRepository.findById(grouponActivityPo.getShopId()).map(Shop::new));
+        Mono<GoodsSpu> goodsSpuMono=grouponActivityPoMono.flatMap(grouponActivityPo ->
+                spuRepository.findById(grouponActivityPo.getGoodsSpuId()).map(GoodsSpu::new));
+        return Mono.zip(grouponActivityPoMono,shopMono,goodsSpuMono).map(tuple->{
+            GrouponDetail grouponDetail=new GrouponDetail(tuple.getT1());
+            grouponDetail.setShop(tuple.getT2());
+            grouponDetail.setGoodsSpu(tuple.getT3());
+            return grouponDetail;
+        }).map(ReturnObject::new);
+//        return grouponRepository.save(new GrouponActivityPo(id,shopId,grouponVo))
+//                .map(GrouponDetail::new)
+//                .map(ReturnObject::new);
     }
 
     public Mono<ReturnObject> changeGrouponofSPU(Long shopId, Long id, GrouponVo grouponVo) {

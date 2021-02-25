@@ -4,19 +4,19 @@ import com.example.model.bo.*;
 import com.example.model.po.*;
 import com.example.model.vo.CouponActivityVo;
 import com.example.repository.*;
-import com.example.util.CommonUtil;
-import com.example.util.NacosHelp;
-import com.example.util.ResponseCode;
-import com.example.util.ReturnObject;
+import com.example.util.*;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +36,8 @@ public class CouponService {
     NacosHelp nacosHelp;
     @Autowired
     CommonUtil commonUtil;
+    @Autowired
+    OssFileUtil ossFileUtil;
 
 
     public Mono<ReturnObject> addCouponActivity(Long userId, Long shopId, CouponActivityVo couponActivityVo) {
@@ -186,6 +188,36 @@ public class CouponService {
                         couponActivityRepository.save(couponActivityPo);
                     }
                     return couponRepository.save(couponPo).map(Coupon::new).map(ReturnObject::new);
+        });
+    }
+
+    public Mono<Object> upCouponActivityPicture(Long id, MultipartFile file) {
+        return couponActivityRepository.findById(id).flatMap(couponActivityPo -> {
+            String str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Random random=new Random();
+            StringBuffer sb=new StringBuffer();
+            for(int i=0;i<10;i++){
+                int number=random.nextInt(62);
+                sb.append(str.charAt(number));
+            }
+            int begin = file.getOriginalFilename().indexOf(".");
+            int last = file.getOriginalFilename().length();
+            sb.append(file.getOriginalFilename(), begin, last);
+            String filename=sb.toString();
+            try {
+                return ossFileUtil.uploadAliyun(file,filename).flatMap(url->{
+                    couponActivityPo.setImageUrl(url);
+                    return couponActivityRepository.save(couponActivityPo).map(a->{
+                        if(a!=null) {
+                            return new ReturnObject<>();
+                        }
+                        return null;
+                    });
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
         });
     }
 }

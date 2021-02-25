@@ -7,7 +7,7 @@ public class Spec{
 
     String name;
 
-    String imageUrl;
+//    String imageUrl;
 
     List<Spec> specItems;
 }

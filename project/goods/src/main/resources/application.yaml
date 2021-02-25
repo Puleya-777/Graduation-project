@@ -35,3 +35,11 @@ privilegeservice:
     multiply: false
     #jwt过期的时间(秒)
     jwtExpire: 3600
+
+aliyun:
+  accessKeyId: LTAI4G1QW56GoeAu9YMTNPPf
+  accessKeySecret: UrUuPuzVwYuzxnQLldMHimzZjRBpVD
+  oss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+    bucketName: ad77
+    urlPrefix: ad77.oss-cn-beijing.aliyuncs.com

@@ -44,7 +44,7 @@ public class GrouponController {
 
     @GetMapping("/shops/{id}/groupons")
     public Mono<Object> queryGroupon(@LoginUser Long userId, @PathVariable Long id,
-                                     @RequestParam Long spuId,@RequestParam String beginTime,
+                                     @RequestParam(required = false) Long spuId,@RequestParam String beginTime,
                                      @RequestParam String endTime,@RequestParam Integer state,
                                      @RequestParam(required = false,defaultValue = "1") Integer page,
                                      @RequestParam(required = false,defaultValue = "1") Integer pageSize){

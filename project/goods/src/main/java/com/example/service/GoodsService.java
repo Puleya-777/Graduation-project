@@ -4,6 +4,7 @@ import com.example.dao.CategoryDao;
 import com.example.dao.GoodsDao;
 import com.example.model.VoObject;
 import com.example.model.bo.Sku;
+import com.example.model.bo.Spu;
 import com.example.model.po.FloatPricePo;
 import com.example.model.po.SkuPo;
 import com.example.model.po.SpuPo;
@@ -13,6 +14,7 @@ import com.example.repository.BrandRepository;
 import com.example.repository.CategoryRepository;
 import com.example.repository.SkuRepository;
 import com.example.repository.SpuRepository;
+import com.example.util.OssFileUtil;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import com.github.pagehelper.PageHelper;
@@ -27,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,6 +49,8 @@ public class GoodsService {
 
     @Resource
     CategoryRepository categoryRepository;
+    @Autowired
+    OssFileUtil ossFileUtil;
 
     public Mono<ReturnObject<VoObject>> getSkuInfoById(Long id) {
 
@@ -58,21 +63,32 @@ public class GoodsService {
     }
 
     public Mono<ReturnObject> updatePicToSku(Long skuId, MultipartFile file) {
-        return goodsDao.findSkuPo(skuId).flatMap(skuPo -> {
-            if(skuPo.getImageUrl()!=null){
-
+        return skuRepository.findById(skuId).flatMap(skuPo -> {
+            String str="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Random random=new Random();
+            StringBuffer sb=new StringBuffer();
+            for(int i=0;i<10;i++){
+                int number=random.nextInt(62);
+                sb.append(str.charAt(number));
             }
-            String fileName = file.getOriginalFilename();
-            String filePath = "/Users/itinypocket/workspace/temp/";
-            File dest = new File(filePath + fileName);
+            int begin = file.getOriginalFilename().indexOf(".");
+            int last = file.getOriginalFilename().length();
+            sb.append(file.getOriginalFilename(), begin, last);
+            String filename=sb.toString();
             try {
-                file.transferTo(dest);
+                return ossFileUtil.uploadAliyun(file,filename).flatMap(url->{
+                    skuPo.setImageUrl(url);
+                    return skuRepository.save(skuPo).map(a->{
+                        if(a!=null) {
+                            return new ReturnObject<>();
+                        }
+                        return null;
+                    });
+                });
             } catch (IOException e) {
-                return Mono.just(new ReturnObject(ResponseCode.IMG_UPDATE_FAIL));
+                e.printStackTrace();
             }
-
-            skuPo.setImageUrl(filePath+fileName);
-            return goodsDao.updateSku(skuPo).map(ReturnObject::new);
+            return null;
         });
     }
 
@@ -179,5 +195,11 @@ public class GoodsService {
                 return spuRepository.deleteSpuPoById(id);
             }
         }).map(ReturnObject::new);
+    }
+
+    public Mono<ReturnObject> newSpu(Long id, SpuVo spuVo) {
+        SpuPo spuPo=new SpuPo(spuVo);
+        spuPo.setShopId(id);
+        return spuRepository.save(spuPo).map(Spu::new).map(ReturnObject::new);
     }
 }

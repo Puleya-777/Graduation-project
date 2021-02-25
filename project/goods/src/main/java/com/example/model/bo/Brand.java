@@ -2,7 +2,11 @@ package com.example.model.bo;
 
 import com.example.model.VoObject;
 import com.example.model.po.BrandPo;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
 public class Brand implements VoObject {
 
     Long id;

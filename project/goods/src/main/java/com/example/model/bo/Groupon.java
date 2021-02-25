@@ -17,12 +17,15 @@ public class Groupon implements VoObject {
     String beginTime;
 
     String endTime;
+    
+    Integer state;
 
     public Groupon(GrouponActivityPo grouponActivityPo){
         id=grouponActivityPo.getId();
         name=grouponActivityPo.getName();
         beginTime=grouponActivityPo.getBeginTime().toString();
         endTime=grouponActivityPo.getEndTime().toString();
+        state=grouponActivityPo.getState();
     }
 
     @Override

@@ -3,8 +3,10 @@ package com.example.model.bo;
 import com.example.model.VoObject;
 import com.example.model.po.CategoryPo;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Category implements VoObject {
 
     Long id;

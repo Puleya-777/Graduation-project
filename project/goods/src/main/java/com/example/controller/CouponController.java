@@ -13,6 +13,7 @@ import com.example.util.ResponseUtil;
 import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
 import java.io.File;
@@ -40,11 +41,11 @@ public class CouponController {
                                           @RequestBody CouponActivityVo couponActivityVo){
         return couponService.addCouponActivity(userId,shopId, couponActivityVo).map(Common::getRetObject);
     }
-//TODO 上传图片
+
     @PostMapping("/shops/{shopId}/couponactivities/{id}")
     public Mono<Object> upCouponActivityPicture(@LoginUser Long userId, @PathVariable Long shopId,
-                                                @PathVariable Long id, File img){
-        return null;
+                                                @PathVariable Long id, @RequestParam("file") MultipartFile img){
+        return couponService.upCouponActivityPicture(id,img);
     }
 
     @GetMapping("/couponactivities")

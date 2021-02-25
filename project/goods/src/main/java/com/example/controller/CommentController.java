@@ -23,7 +23,6 @@ public class CommentController {
     @Autowired
     CommentService commentService;
 
-    //TODO
     @GetMapping("/comments/states")
     public Mono<Object> getcommentState(){
         CommentState[] states= CommentState.class.getEnumConstants();

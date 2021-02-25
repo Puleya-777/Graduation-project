@@ -121,7 +121,7 @@ public class GoodsController {
      */
     @PostMapping("/shops/{shopId}/skus/{id}/uploadImg")
     public Mono<Object> updatePicToSku(@LoginUser Long userId, @RequestParam Integer shopId, @RequestParam Long skuId,
-                                       @RequestParam MultipartFile img){
+                                       @RequestParam("file") MultipartFile img){
         return goodsService.updatePicToSku(skuId,img).map(Common::getRetObject);
     }
 
@@ -208,7 +208,6 @@ public class GoodsController {
         return categoryService.deleteCategory(id).map(returnObject -> ResponseUtil.ok());
     }
 
-    //TODO
     /**
      * 查看一条商品SPU的详细信息（无需登录）
      * @param id
@@ -219,7 +218,6 @@ public class GoodsController {
         return goodsService.getSpuInfoById(id).map(Common::getRetObject);
     }
 
-    //TODO
     /**
      * 查看一条分享商品SPU的详细信息（需登录）
      * @param userId
@@ -241,8 +239,8 @@ public class GoodsController {
      * @return
      */
     @PostMapping("/shops/{id}/spus")
-    public Mono<Object> newSpu(@LoginUser Long userId, @PathVariable Integer id, @RequestBody SpuVo spuVo){
-        return null;
+    public Mono<Object> newSpu(@LoginUser Long userId, @PathVariable Long id, @RequestBody SpuVo spuVo){
+        return goodsService.newSpu(id,spuVo).map(Common::getRetObject);
     }
 
     /**
@@ -367,7 +365,6 @@ public class GoodsController {
     }
 
 
-    //TODO
     /**
      * 上传图片,如果该品牌有图片，需修改该品牌的图片，并删除图片文件
      * @param userId
@@ -377,9 +374,9 @@ public class GoodsController {
      * @return
      */
     @PostMapping("/shops/{shopId}/brands/{id}/uploadImg")
-    public Mono<Object> uploadBrandImg(@LoginUser Long userId,@PathVariable Integer shopId,
-                                       @PathVariable Integer id,File img){
-        return null;
+    public Mono uploadBrandImg(@LoginUser Long userId,@PathVariable Long shopId,
+                                       @PathVariable Long id,@RequestParam("file") MultipartFile img){
+        return brandService.uploadBrandImg(id,img);
     }
 
     /**
@@ -465,7 +462,7 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/categories/{id}")
     public Mono<Object> removeSpuCategory(@LoginUser Long userId,@PathVariable Long shopId,
                                        @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuCategory(spuId,null).map(returnObject -> {
+        return goodsService.addSpuCategory(spuId,id).map(returnObject -> {
             if(returnObject.getCode()==ResponseCode.OK){
                 return ResponseUtil.ok();
             }else {
@@ -507,7 +504,7 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/brands/{id}")
     public Mono<Object> removeSpuBrand(@LoginUser Long userId,@PathVariable Long shopId,
                                     @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuBrand(spuId,null).map(returnObject -> {
+        return goodsService.addSpuBrand(spuId,id).map(returnObject -> {
             if(returnObject.getCode()==ResponseCode.OK){
                 return ResponseUtil.ok();
             }else {

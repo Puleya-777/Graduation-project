@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @Service
 public class CommentService {
 
-    //TODO 查询user模块用id查user，这些函数都需要
 
     @Resource
     CommentRepository commentRepository;

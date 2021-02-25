@@ -5,15 +5,19 @@ import com.example.model.bo.*;
 import com.example.model.po.*;
 import com.example.model.vo.SimpleRetSku;
 import com.example.repository.*;
+import com.example.util.NacosHelp;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class GoodsDao {
@@ -28,6 +32,8 @@ public class GoodsDao {
     ShopRepository shopRepository;
     @Resource
     CategoryRepository categoryRepository;
+    @Autowired
+    NacosHelp nacosHelp;
 
     public Mono<Sku> getSkuInfoById(Long id) {
 
@@ -105,8 +111,12 @@ public class GoodsDao {
         Mono<Brand> brandMono=spuPoMono.flatMap(spuPo -> brandRepository.findById(spuPo.getBrandId()).map(Brand::new));
         Mono<Category> categoryMono=spuPoMono.flatMap(spuPo -> categoryRepository.findById(spuPo.getCategoryId()).map(Category::new));
         Mono<Shop> shopMono=spuPoMono.flatMap(spuPo -> shopRepository.findById(spuPo.getShopId()).map(Shop::new));
-        return Mono.zip(spuPoMono,brandMono,categoryMono,shopMono).map(tuple->{
+        Mono<List<SimpleRetSku>> simpleRetSkuFlux=spuPoMono.flatMap(spuPo -> skuRepository.findAllByGoodsSpuId(spuPo.getId())
+                .map(SimpleRetSku::new).collect(Collectors.toList()));
+        return Mono.zip(spuPoMono,brandMono,categoryMono,shopMono,simpleRetSkuFlux).map(tuple->{
             Spu spu=new Spu(tuple.getT1(),tuple.getT2(),tuple.getT3(),tuple.getT4());
+            spu.setFreight(nacosHelp.findFreightById(tuple.getT1().getFreightId()));
+            spu.setSkuList(tuple.getT5());
             return spu;
         });
     }
