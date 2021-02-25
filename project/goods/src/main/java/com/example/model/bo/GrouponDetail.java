@@ -2,7 +2,10 @@ package com.example.model.bo;
 
 import com.example.model.VoObject;
 import com.example.model.po.GrouponActivityPo;
+import io.netty.util.internal.StringUtil;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 public class GrouponDetail implements VoObject {
@@ -19,13 +22,13 @@ public class GrouponDetail implements VoObject {
 
     Integer state;
 
-    String beginTime;
+    LocalDateTime beginTime;
 
-    String endTime;
+    LocalDateTime endTime;
 
-    String gmtCreate;
+    LocalDateTime gmtCreate;
 
-    String gmtModified;
+    LocalDateTime gmtModified;
 
     public GrouponDetail(GrouponActivityPo grouponActivityPo){
         id=grouponActivityPo.getId();
@@ -39,10 +42,11 @@ public class GrouponDetail implements VoObject {
 
         strategy=grouponActivityPo.getStrategy();
         state=grouponActivityPo.getState();
-        beginTime=grouponActivityPo.getBeginTime().toString();
-        endTime=grouponActivityPo.getEndTime().toString();
-        gmtCreate=grouponActivityPo.getGmtCreate().toString();
-        gmtModified=grouponActivityPo.getGmtModified().toString();
+        beginTime=grouponActivityPo.getBeginTime();
+        endTime=grouponActivityPo.getEndTime();
+        gmtCreate = grouponActivityPo.getGmtCreate();
+        if(grouponActivityPo.getGmtModified()!=null)
+            gmtModified = grouponActivityPo.getGmtModified();
     }
 
     @Override

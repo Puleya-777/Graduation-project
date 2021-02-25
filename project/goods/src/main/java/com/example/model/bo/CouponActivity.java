@@ -27,10 +27,13 @@ public class CouponActivity implements VoObject {
         id=couponActivityPo.getId();
         name=couponActivityPo.getName();
         imageUrl=couponActivityPo.getImageUrl();
-        beginTime=couponActivityPo.getBeginTime().toString();
-        endTime=couponActivityPo.getEndTime().toString();
+        if(couponActivityPo.getBeginTime()!=null)
+            beginTime=couponActivityPo.getBeginTime().toString();
+        if(couponActivityPo.getEndTime()!=null)
+            endTime=couponActivityPo.getEndTime().toString();
         quantity=couponActivityPo.getQuantity();
-        couponTime=couponActivityPo.getCouponTime().toString();
+        if(couponActivityPo.getCouponTime()!=null)
+            couponTime=couponActivityPo.getCouponTime().toString();
     }
 
     @Override

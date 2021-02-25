@@ -60,7 +60,8 @@ public class CouponActivityDetail implements VoObject {
         ModiBy=new User();
         ModiBy.setId(couponActivityPo.getModiBy());
         gmtCreate=couponActivityPo.getGmtCreate().toString();
-        gmtModified=couponActivityPo.getGmtModified().toString();
+        if(couponActivityPo.getGmtModified()!=null)
+            gmtModified=couponActivityPo.getGmtModified().toString();
     }
 
     @Override

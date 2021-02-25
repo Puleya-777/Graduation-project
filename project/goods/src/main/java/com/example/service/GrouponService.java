@@ -83,7 +83,15 @@ public class GrouponService {
     }
 
     public Mono<ReturnObject> cancelGrouponofSPU(Long id) {
-        return grouponRepository.deleteById(id).map(ReturnObject::new);
+        return grouponRepository.findById(id)
+                .defaultIfEmpty(new GrouponActivityPo())
+                .flatMap(grouponActivityPo -> {
+                    if(grouponActivityPo.getId()==null){
+                        return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+                    }else{
+                        return grouponRepository.deleteGrouponActivityPoById(id).map(ReturnObject::new);
+                    }
+                });
     }
 
     public Mono<ReturnObject> changeGrouponState(Long id, int state) {

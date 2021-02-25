@@ -38,7 +38,8 @@ public class FloatPrice implements VoObject {
         modifiedBy=new User();
         valid=floatPricePo.getValid();
         gmtCreate=floatPricePo.getGmtCreate().toString();
-        gmtModified=floatPricePo.getGmtModified().toString();
+        if(floatPricePo.getGmtModified()!=null)
+            gmtModified=floatPricePo.getGmtModified().toString();
     }
 
     @Override

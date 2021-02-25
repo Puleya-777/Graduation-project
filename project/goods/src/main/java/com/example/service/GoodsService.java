@@ -176,7 +176,7 @@ public class GoodsService {
             if(spuPo.getId()==null){
                 return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
             }else{
-                return spuRepository.deleteById(id);
+                return spuRepository.deleteSpuPoById(id);
             }
         }).map(ReturnObject::new);
     }

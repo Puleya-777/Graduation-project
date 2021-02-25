@@ -22,8 +22,10 @@ public class Brand implements VoObject {
         name=brandPo.getName();
         imageUrl=brandPo.getName();
         detail=brandPo.getDetail();
-        gmtCreate=brandPo.getGmtCreate().toString();
-        gmtModified=brandPo.getGmtModified().toString();
+        if(brandPo.getGmtCreate()!=null)
+            gmtCreate=brandPo.getGmtCreate().toString();
+        if(brandPo.getGmtModified()!=null)
+            gmtModified=brandPo.getGmtModified().toString();
     }
 
     @Override
