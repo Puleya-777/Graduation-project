@@ -65,7 +65,7 @@ public class CouponService {
 
     public Mono<ReturnObject> showOwnInvalidcouponactivities(Long shopId,Integer page,Integer pageSize) {
         return couponActivityRepository.findAllByShopId(shopId)
-                .filter(couponActivityPo -> couponActivityPo.getState()==1)
+                .filter(couponActivityPo -> couponActivityPo.getState()!=null&&couponActivityPo.getState()==1)
                 .map(CouponActivityDetail::new)
                 .collect(Collectors.toList())
                 .map(list->commonUtil.listToPage(list,page,pageSize))

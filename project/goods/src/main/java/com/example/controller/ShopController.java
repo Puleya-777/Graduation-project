@@ -36,6 +36,12 @@ public class ShopController {
         return Mono.just(ResponseUtil.ok(new ReturnObject<List>(ShopStateVos).getData()));
     }
 
+    @GetMapping("/shops")
+    public Mono<Object> findAllShop(@RequestParam(required = false,defaultValue = "1") Integer page,
+                                    @RequestParam(required = false,defaultValue = "10") Integer pageSize){
+        return shopService.findAllShop(page,pageSize).map(Common::getListRetObject);
+    }
+
     @PostMapping("/shops")
     public Mono<Object> addShop(@LoginUser Long userId, @RequestBody ShopVo shopVo){
         return shopService.addShop(shopVo).map(Common::getRetObject);

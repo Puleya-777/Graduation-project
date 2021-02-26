@@ -53,7 +53,8 @@ public class CouponActivityDetail implements VoObject {
         imageUrl=couponActivityPo.getImageUrl();
         beginTime=couponActivityPo.getBeginTime().toString();
         endTime=couponActivityPo.getEndTime().toString();
-        couponTime=couponActivityPo.getCouponTime().toString();
+        if(couponTime!=null)
+            couponTime=couponActivityPo.getCouponTime().toString();
         strategy=couponActivityPo.getStrategy();
         createdBy=new User();
         createdBy.setId(couponActivityPo.getCreatedBy());

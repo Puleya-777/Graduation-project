@@ -5,6 +5,7 @@ import com.example.model.po.ShopPo;
 import com.example.model.vo.AuditShopVo;
 import com.example.model.vo.ShopVo;
 import com.example.repository.ShopRepository;
+import com.example.util.CommonUtil;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ public class ShopService {
 
     @Autowired
     ShopRepository shopRepository;
+    @Autowired
+    CommonUtil commonUtil;
 
     public Mono<ReturnObject> addShop(ShopVo shopVo) {
         ShopPo shopPo=new ShopPo(shopVo);
@@ -83,5 +86,10 @@ public class ShopService {
 
             }
         }).map(ReturnObject::new);
+    }
+
+    public Mono<ReturnObject> findAllShop(Integer page,Integer pageSize) {
+        return shopRepository.findAll().collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
     }
 }
