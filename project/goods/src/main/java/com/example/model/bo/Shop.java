@@ -25,7 +25,8 @@ public class Shop implements VoObject {
         id=shopPo.getId();
         name=shopPo.getName();
         state=shopPo.getState();
-        gmtCreate=shopPo.getGmtCreate().toString();
+        if(shopPo.getGmtCreate()!=null)
+            gmtCreate=shopPo.getGmtCreate().toString();
         if(shopPo.getGmtModified()!=null)
             gmtModified=shopPo.getGmtModified().toString();
     }

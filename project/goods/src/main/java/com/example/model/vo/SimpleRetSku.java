@@ -2,7 +2,9 @@ package com.example.model.vo;
 
 import com.example.model.VoObject;
 import com.example.model.po.SkuPo;
+import lombok.Data;
 
+@Data
 public class SimpleRetSku implements VoObject{
 
     Long id;
@@ -34,7 +36,7 @@ public class SimpleRetSku implements VoObject{
 
     @Override
     public Object createVo() {
-        return null;
+        return this;
     }
 
     @Override

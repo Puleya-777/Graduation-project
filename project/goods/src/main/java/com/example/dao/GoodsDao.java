@@ -108,9 +108,9 @@ public class GoodsDao {
 
     public Mono<Spu> getSpuInfoById(Long id) {
         Mono<SpuPo> spuPoMono=spuRepository.findById(id);
-        Mono<Brand> brandMono=spuPoMono.flatMap(spuPo -> brandRepository.findById(spuPo.getBrandId()).map(Brand::new));
-        Mono<Category> categoryMono=spuPoMono.flatMap(spuPo -> categoryRepository.findById(spuPo.getCategoryId()).map(Category::new));
-        Mono<Shop> shopMono=spuPoMono.flatMap(spuPo -> shopRepository.findById(spuPo.getShopId()).map(Shop::new));
+        Mono<Brand> brandMono=spuPoMono.flatMap(spuPo -> brandRepository.findById(spuPo.getBrandId()).defaultIfEmpty(new BrandPo()).map(Brand::new));
+        Mono<Category> categoryMono=spuPoMono.flatMap(spuPo -> categoryRepository.findById(spuPo.getCategoryId()).defaultIfEmpty(new CategoryPo()).map(Category::new));
+        Mono<Shop> shopMono=spuPoMono.flatMap(spuPo -> shopRepository.findById(spuPo.getShopId()).defaultIfEmpty(new ShopPo()).map(Shop::new));
         Mono<List<SimpleRetSku>> simpleRetSkuFlux=spuPoMono.flatMap(spuPo -> skuRepository.findAllByGoodsSpuId(spuPo.getId())
                 .map(SimpleRetSku::new).collect(Collectors.toList()));
         return Mono.zip(spuPoMono,brandMono,categoryMono,shopMono,simpleRetSkuFlux).map(tuple->{

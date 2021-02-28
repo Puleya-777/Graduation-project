@@ -3,25 +3,19 @@ package com.example.service;
 import com.example.dao.CategoryDao;
 import com.example.dao.GoodsDao;
 import com.example.model.VoObject;
-import com.example.model.bo.Sku;
-import com.example.model.bo.Spu;
-import com.example.model.po.FloatPricePo;
-import com.example.model.po.SkuPo;
-import com.example.model.po.SpuPo;
+import com.example.model.bo.*;
+import com.example.model.po.*;
+import com.example.model.vo.SimpleRetSku;
 import com.example.model.vo.SkuVo;
 import com.example.model.vo.SpuVo;
-import com.example.repository.BrandRepository;
-import com.example.repository.CategoryRepository;
-import com.example.repository.SkuRepository;
-import com.example.repository.SpuRepository;
-import com.example.util.OssFileUtil;
-import com.example.util.ResponseCode;
-import com.example.util.ReturnObject;
+import com.example.repository.*;
+import com.example.util.*;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
@@ -46,11 +40,16 @@ public class GoodsService {
     SkuRepository skuRepository;
     @Autowired
     BrandRepository brandRepository;
-
+    @Resource
+    ShopRepository shopRepository;
     @Resource
     CategoryRepository categoryRepository;
     @Autowired
     OssFileUtil ossFileUtil;
+    @Autowired
+    NacosHelp nacosHelp;
+    @Autowired
+    CommonUtil commonUtil;
 
     public Mono<ReturnObject<VoObject>> getSkuInfoById(Long id) {
 
@@ -201,5 +200,31 @@ public class GoodsService {
         SpuPo spuPo=new SpuPo(spuVo);
         spuPo.setShopId(id);
         return spuRepository.save(spuPo).map(Spu::new).map(ReturnObject::new);
+    }
+
+    public Mono<ReturnObject> getAllSpuInShop(Long shopId,Integer page,Integer pageSize) {
+        return spuRepository.findAllByShopId(shopId)
+                .flatMap(spuPo -> {
+                    Mono<Brand> brandMono= brandRepository.findById(spuPo.getBrandId()).defaultIfEmpty(new BrandPo()).map(Brand::new);
+                    Mono<Category> categoryMono= categoryRepository.findById(spuPo.getCategoryId()).defaultIfEmpty(new CategoryPo()).map(Category::new);
+                    Mono<Shop> shopMono= shopRepository.findById(spuPo.getShopId()).defaultIfEmpty(new ShopPo()).map(Shop::new);
+                    Mono<List<SimpleRetSku>> simpleRetSkuFlux= skuRepository.findAllByGoodsSpuId(spuPo.getId())
+                            .map(SimpleRetSku::new).collect(Collectors.toList());
+//                    System.out.println(spuPo);
+                    return Mono.zip(brandMono,categoryMono,shopMono,simpleRetSkuFlux).map(tuple-> {
+                        Spu spu = new Spu(spuPo, tuple.getT1(), tuple.getT2(), tuple.getT3());
+                        spu.setFreight(nacosHelp.findFreightById(spuPo.getFreightId()));
+                        spu.setSkuList(tuple.getT4());
+                        System.out.println(spu);
+
+                        return spu;
+                    });
+                        }
+                ).collect(Collectors.toList())
+                .map(list->{System.out.println(list);return list;}).map(list->commonUtil.listToPage(list,page,pageSize))
+                .map(ReturnObject::new);
+//        Mono<List<SpuPo>> nn=spuRepository.findAllByShopId(shopId).collect(Collectors.toList());
+//        System.out.println(nn.block());
+//        return nn.map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
     }
 }

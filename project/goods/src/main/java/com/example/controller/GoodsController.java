@@ -512,4 +512,12 @@ public class GoodsController {
             }
         });
     }
+
+
+    @GetMapping("/shops/spus")
+    public Mono<Object> getAllSpuInShop(@RequestParam Long shopId,
+                                        @RequestParam(required = false,defaultValue = "1") Integer page,
+                                        @RequestParam(required = false,defaultValue = "10") Integer pageSize){
+        return goodsService.getAllSpuInShop(shopId,page,pageSize).map(Common::getPageRetObject);
+    }
 }
