@@ -89,7 +89,7 @@ public class ShopService {
     }
 
     public Mono<ReturnObject> findAllShop(Integer page,Integer pageSize) {
-        return shopRepository.findAll().collect(Collectors.toList())
+        return shopRepository.findAll().map(Shop::new).collect(Collectors.toList())
                 .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
     }
 }
