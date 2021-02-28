@@ -462,7 +462,7 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/categories/{id}")
     public Mono<Object> removeSpuCategory(@LoginUser Long userId,@PathVariable Long shopId,
                                        @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuCategory(spuId,id).map(returnObject -> {
+        return goodsService.addSpuCategory(spuId,null).map(returnObject -> {
             if(returnObject.getCode()==ResponseCode.OK){
                 return ResponseUtil.ok();
             }else {
@@ -504,7 +504,7 @@ public class GoodsController {
     @DeleteMapping("/shops/{shopId}/spus/{spuId}/brands/{id}")
     public Mono<Object> removeSpuBrand(@LoginUser Long userId,@PathVariable Long shopId,
                                     @PathVariable Long spuId,@PathVariable Long id){
-        return goodsService.addSpuBrand(spuId,id).map(returnObject -> {
+        return goodsService.addSpuBrand(spuId,null).map(returnObject -> {
             if(returnObject.getCode()==ResponseCode.OK){
                 return ResponseUtil.ok();
             }else {
