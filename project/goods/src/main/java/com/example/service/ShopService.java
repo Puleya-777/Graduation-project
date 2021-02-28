@@ -31,14 +31,14 @@ public class ShopService {
 
     public Mono<ReturnObject> modifyShop(Long id, ShopVo shopVo) {
         return shopRepository.findById(id).defaultIfEmpty(new ShopPo())
-                .map(shopPo -> {
+                .flatMap(shopPo -> {
                     if(shopPo.getId()==null){
-                        return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
+                        return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
                     }else{
                         shopPo.setName(shopVo.getName());
-                        return shopRepository.save(shopPo);
+                        return shopRepository.save(shopPo).map(ReturnObject::new);
                     }
-                }).map(ReturnObject::new);
+                });
     }
 
     public Mono<Object> deleteShop(Long id) {
