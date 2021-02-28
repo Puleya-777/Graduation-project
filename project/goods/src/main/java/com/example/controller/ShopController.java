@@ -39,7 +39,7 @@ public class ShopController {
     @GetMapping("/shops")
     public Mono<Object> findAllShop(@RequestParam(required = false,defaultValue = "1") Integer page,
                                     @RequestParam(required = false,defaultValue = "10") Integer pageSize){
-        return shopService.findAllShop(page,pageSize).map(Common::getListRetObject);
+        return shopService.findAllShop(page,pageSize).map(Common::getPageRetObject);
     }
 
     @PostMapping("/shops")
