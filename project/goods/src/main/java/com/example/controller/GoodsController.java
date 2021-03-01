@@ -128,13 +128,13 @@ public class GoodsController {
     /**
      * 管理员或店家逻辑删除SKU
      * @param userId
-     * @param skuId
+     * @param id
      * @param shopId
      * @return
      */
     @DeleteMapping("/shops/{shopId}/skus/{id}")
-    public Mono<Object> deleteSku(@LoginUser Long userId,@PathVariable Long skuId,@PathVariable Integer shopId){
-        return goodsService.deleteSku(skuId).map(returnObject -> ResponseUtil.ok());
+    public Mono<Object> deleteSku(@LoginUser Long userId,@PathVariable Long shopId,@PathVariable Long id){
+        return goodsService.deleteSku(id).map(returnObject -> ResponseUtil.ok());
     }
 
     /**
