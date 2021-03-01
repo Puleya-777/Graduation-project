@@ -2,8 +2,10 @@ package com.example.model.vo;
 
 import com.example.model.bo.Sku;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class SkuVo {
 
     //商品型号序号(序号由spuSpec中的id，按段组成)

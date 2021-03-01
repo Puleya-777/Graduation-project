@@ -3,8 +3,10 @@ package com.example.model.vo;
 import com.example.model.VoObject;
 import com.example.model.po.SkuPo;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class SimpleRetSku implements VoObject{
 
     Long id;
