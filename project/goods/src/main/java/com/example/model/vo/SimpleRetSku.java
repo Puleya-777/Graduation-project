@@ -13,6 +13,8 @@ public class SimpleRetSku implements VoObject{
 
     String name;
 
+    Integer state;
+
     String skuSn;
 
     String imageUrl;
@@ -28,6 +30,7 @@ public class SimpleRetSku implements VoObject{
     public SimpleRetSku(SkuPo skuPo){
         id=skuPo.getId();
         name=skuPo.getName();
+        state=skuPo.getState();
         skuSn=skuPo.getSkuSn();
         imageUrl=skuPo.getImageUrl();
         inventory=skuPo.getInventory();
