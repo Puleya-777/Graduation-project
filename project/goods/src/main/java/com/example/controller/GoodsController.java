@@ -141,14 +141,14 @@ public class GoodsController {
      * 管理员或店家修改SKU信息
      * @param userId
      * @param shopId
-     * @param skuId
+     * @param id
      * @param skuVo
      * @return
      */
     @PutMapping("/shops/{shopId}/skus/{id}")
     public Mono<Object> putSku(@LoginUser Long userId, @PathVariable Integer shopId,
-                               @PathVariable Long skuId, @RequestBody SkuVo skuVo){
-        return goodsService.putSku(skuId,skuVo).map(returnObject -> ResponseUtil.ok());
+                               @PathVariable Long id, @RequestBody SkuVo skuVo){
+        return goodsService.putSku(id,skuVo).map(returnObject -> ResponseUtil.ok());
     }
 
     /**
