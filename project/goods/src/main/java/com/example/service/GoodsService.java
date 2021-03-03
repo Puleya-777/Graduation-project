@@ -203,28 +203,29 @@ public class GoodsService {
     }
 
     public Mono<ReturnObject> getAllSpuInShop(Long shopId,Integer page,Integer pageSize) {
+//        return spuRepository.findAllByShopId(shopId)
+//                .flatMap(spuPo -> {
+//                    Mono<Brand> brandMono= brandRepository.findById(spuPo.getBrandId()).defaultIfEmpty(new BrandPo()).map(Brand::new);
+//                    Mono<Category> categoryMono= categoryRepository.findById(spuPo.getCategoryId()).defaultIfEmpty(new CategoryPo()).map(Category::new);
+//                    Mono<Shop> shopMono= shopRepository.findById(spuPo.getShopId()).defaultIfEmpty(new ShopPo()).map(Shop::new);
+//                    Mono<List<SimpleRetSku>> simpleRetSkuFlux= skuRepository.findAllByGoodsSpuId(spuPo.getId())
+//                            .map(SimpleRetSku::new).collect(Collectors.toList());
+////                    System.out.println(spuPo);
+//                    return Mono.zip(brandMono,categoryMono,shopMono,simpleRetSkuFlux).map(tuple-> {
+//                        Spu spu = new Spu(spuPo, tuple.getT1(), tuple.getT2(), tuple.getT3());
+//                        spu.setFreight(nacosHelp.findFreightById(spuPo.getFreightId()));
+//                        spu.setSkuList(tuple.getT4());
+//                        System.out.println(spu);
+//
+//                        return spu;
+//                    });
+//                        }
+//                ).collect(Collectors.toList())
+//                .map(list->{System.out.println(list);return list;}).map(list->commonUtil.listToPage(list,page,pageSize))
+//                .map(ReturnObject::new);
         return spuRepository.findAllByShopId(shopId)
                 .flatMap(spuPo -> {
-                    Mono<Brand> brandMono= brandRepository.findById(spuPo.getBrandId()).defaultIfEmpty(new BrandPo()).map(Brand::new);
-                    Mono<Category> categoryMono= categoryRepository.findById(spuPo.getCategoryId()).defaultIfEmpty(new CategoryPo()).map(Category::new);
-                    Mono<Shop> shopMono= shopRepository.findById(spuPo.getShopId()).defaultIfEmpty(new ShopPo()).map(Shop::new);
-                    Mono<List<SimpleRetSku>> simpleRetSkuFlux= skuRepository.findAllByGoodsSpuId(spuPo.getId())
-                            .map(SimpleRetSku::new).collect(Collectors.toList());
-//                    System.out.println(spuPo);
-                    return Mono.zip(brandMono,categoryMono,shopMono,simpleRetSkuFlux).map(tuple-> {
-                        Spu spu = new Spu(spuPo, tuple.getT1(), tuple.getT2(), tuple.getT3());
-                        spu.setFreight(nacosHelp.findFreightById(spuPo.getFreightId()));
-                        spu.setSkuList(tuple.getT4());
-                        System.out.println(spu);
-
-                        return spu;
-                    });
-                        }
-                ).collect(Collectors.toList())
-                .map(list->{System.out.println(list);return list;}).map(list->commonUtil.listToPage(list,page,pageSize))
-                .map(ReturnObject::new);
-//        Mono<List<SpuPo>> nn=spuRepository.findAllByShopId(shopId).collect(Collectors.toList());
-//        System.out.println(nn.block());
-//        return nn.map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
+                    return goodsDao.getSpuInfoById(spuPo.getId());
+                }).collect(Collectors.toList()).map(ReturnObject::new);
     }
 }
