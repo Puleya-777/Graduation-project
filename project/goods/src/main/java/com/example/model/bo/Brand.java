@@ -24,7 +24,7 @@ public class Brand implements VoObject {
     public Brand(BrandPo brandPo){
         id=brandPo.getId();
         name=brandPo.getName();
-        imageUrl=brandPo.getName();
+        imageUrl=brandPo.getImageUrl();
         detail=brandPo.getDetail();
         if(brandPo.getGmtCreate()!=null)
             gmtCreate=brandPo.getGmtCreate().toString();
