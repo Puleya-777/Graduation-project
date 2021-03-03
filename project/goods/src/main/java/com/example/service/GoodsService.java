@@ -226,6 +226,7 @@ public class GoodsService {
         return spuRepository.findAllByShopId(shopId)
                 .flatMap(spuPo -> {
                     return goodsDao.getSpuInfoById(spuPo.getId());
-                }).collect(Collectors.toList()).map(ReturnObject::new);
+                }).collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
     }
 }
