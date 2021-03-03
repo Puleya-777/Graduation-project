@@ -115,14 +115,14 @@ public class GoodsController {
      * sku上传图片,如果该sku有图片，需修改该sku的图片，并删除图片文件
      * @param userId
      * @param shopId
-     * @param skuId
+     * @param id
      * @param img
      * @return
      */
     @PostMapping("/shops/{shopId}/skus/{id}/uploadImg")
-    public Mono<Object> updatePicToSku(@LoginUser Long userId, @RequestParam Integer shopId, @RequestParam Long skuId,
+    public Mono<Object> updatePicToSku(@LoginUser Long userId, @PathVariable Integer shopId, @PathVariable Long id,
                                        @RequestParam("file") MultipartFile img){
-        return goodsService.updatePicToSku(skuId,img).map(Common::getRetObject);
+        return goodsService.updatePicToSku(id,img).map(Common::getRetObject);
     }
 
     /**
