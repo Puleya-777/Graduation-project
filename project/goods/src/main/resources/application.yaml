@@ -1,3 +1,5 @@
+
+
 spring:
   r2dbc:
     #    url: r2dbcs:mysql://139.9.160.14:3306/test
@@ -43,3 +45,5 @@ aliyun:
     endpoint: oss-cn-beijing.aliyuncs.com
     bucketName: ad77
     urlPrefix: ad77.oss-cn-beijing.aliyuncs.com
+server:
+  port: 8081

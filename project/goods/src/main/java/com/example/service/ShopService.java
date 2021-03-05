@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +38,7 @@ public class ShopService {
                         return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
                     }else{
                         shopPo.setName(shopVo.getName());
+                        shopPo.setGmtModified(LocalDateTime.now());
                         return shopRepository.save(shopPo).map(ReturnObject::new);
                     }
                 });

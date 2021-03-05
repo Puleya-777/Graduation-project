@@ -9,6 +9,6 @@ public interface CouponActivityRepository extends ReactiveCrudRepository<CouponA
 
     Flux<CouponActivityPo> findAllByShopId(Long shopId);
 
-    Mono<CouponActivityPo> deleteCouponActivityPoById(Long id);
+    Mono<Integer> deleteCouponActivityPoById(Long id);
 
 }

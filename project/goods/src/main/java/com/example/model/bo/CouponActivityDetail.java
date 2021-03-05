@@ -51,8 +51,10 @@ public class CouponActivityDetail implements VoObject {
         quantityType=couponActivityPo.getQuantitiyType();
         validTerm=couponActivityPo.getValidTerm();
         imageUrl=couponActivityPo.getImageUrl();
-        beginTime=couponActivityPo.getBeginTime().toString();
-        endTime=couponActivityPo.getEndTime().toString();
+        if(couponActivityPo.getBeginTime()!=null)
+            beginTime=couponActivityPo.getBeginTime().toString();
+        if(couponActivityPo.getEndTime()!=null)
+            endTime=couponActivityPo.getEndTime().toString();
         if(couponTime!=null)
             couponTime=couponActivityPo.getCouponTime().toString();
         strategy=couponActivityPo.getStrategy();
@@ -60,7 +62,8 @@ public class CouponActivityDetail implements VoObject {
         createdBy.setId(couponActivityPo.getCreatedBy());
         ModiBy=new User();
         ModiBy.setId(couponActivityPo.getModiBy());
-        gmtCreate=couponActivityPo.getGmtCreate().toString();
+        if(couponActivityPo.getGmtCreate()!=null)
+            gmtCreate=couponActivityPo.getGmtCreate().toString();
         if(couponActivityPo.getGmtModified()!=null)
             gmtModified=couponActivityPo.getGmtModified().toString();
     }

@@ -9,7 +9,7 @@ public interface GrouponRepository extends ReactiveCrudRepository<GrouponActivit
 
     Flux<GrouponActivityPo> findAllByGoodsSpuIdAndShopId(Long goodsSpuId,Long shopId);
 
-    Mono<GrouponActivityPo> deleteGrouponActivityPoById(Long id);
+    Mono<Integer> deleteGrouponActivityPoById(Long id);
 
     Flux<GrouponActivityPo> findAllByShopId(Long shopId);
 
