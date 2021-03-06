@@ -39,7 +39,15 @@ public class GrouponService {
 
 
     public Mono<ReturnObject> queryGroupons(Long spuId, Long shopId, Integer timeline, Integer page, Integer pageSize) {
-        return grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,shopId)
+        Flux<GrouponActivityPo> grouponActivityPoFlux=null;
+        if(spuId!=null&&shopId!=null){
+            grouponActivityPoFlux=grouponRepository.findAllByGoodsSpuIdAndShopId(spuId,shopId);
+        }else if(spuId==null){
+            grouponActivityPoFlux=grouponRepository.findAllByShopId(shopId);
+        }else{
+            grouponActivityPoFlux=grouponRepository.findAllByGoodsSpuId(spuId);
+        }
+        return grouponActivityPoFlux
                 .filter(grouponActivityPo -> {
                     if(timeline==0){
                         return grouponActivityPo.getBeginTime().isAfter(LocalDateTime.now());

@@ -50,8 +50,7 @@ public class ShopService {
                     if(shopPo.getId()==null){
                         return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
                     }else{
-                        shopPo.setState(0);
-                        return shopRepository.save(shopPo);
+                        return shopRepository.deleteById(id);
                     }
                 }).map(ReturnObject::new);
     }

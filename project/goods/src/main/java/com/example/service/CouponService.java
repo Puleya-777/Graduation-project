@@ -49,7 +49,13 @@ public class CouponService {
     }
 
     public Mono<ReturnObject> showOwncouponactivities(Long shopId, Integer timeline, Integer page, Integer pageSize) {
-        return couponActivityRepository.findAllByShopId(shopId).map(CouponActivity::new)
+        Flux<CouponActivityPo> couponActivityPoFlux=null;
+        if(shopId!=null){
+            couponActivityPoFlux=couponActivityRepository.findAllByShopId(shopId);
+        }else{
+            couponActivityPoFlux=couponActivityRepository.findAll();
+        }
+        return couponActivityPoFlux.map(CouponActivity::new)
                 .collect(Collectors.toList())
                 .map(list->commonUtil.listToPage(list,page,pageSize))
                 .map(ReturnObject::new);

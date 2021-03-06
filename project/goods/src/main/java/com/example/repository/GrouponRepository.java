@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 public interface GrouponRepository extends ReactiveCrudRepository<GrouponActivityPo,Long> {
 
     Flux<GrouponActivityPo> findAllByGoodsSpuIdAndShopId(Long goodsSpuId,Long shopId);
+    Flux<GrouponActivityPo> findAllByGoodsSpuId(Long goodsSpuId);
 
     Mono<Integer> deleteGrouponActivityPoById(Long id);
 

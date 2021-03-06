@@ -49,7 +49,7 @@ public class CouponController {
     }
 
     @GetMapping("/couponactivities")
-    public Mono<Object> showOwncouponactivities(@RequestParam Long shopId,@RequestParam Integer timeline,
+    public Mono<Object> showOwncouponactivities(@RequestParam(required = false) Long shopId,@RequestParam Integer timeline,
                                                 @RequestParam(required = false,defaultValue = "1") Integer page,
                                                 @RequestParam(required = false,defaultValue = "1") Integer pageSize){
         return couponService.showOwncouponactivities(shopId,timeline,page,pageSize).map(Common::getPageRetObject);
