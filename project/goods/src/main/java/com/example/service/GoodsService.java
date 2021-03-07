@@ -161,13 +161,13 @@ public class GoodsService {
                 .map(Sku::new).collect(Collectors.toList());
         return skuPos.map(list->{
 //            PageInfo<VoObject> pageInfo = PageInfo.of(list);
-            PageInfo<VoObject> retPage=new PageInfo<>(list);
-            retPage.setPages(page);
-            retPage.setPageNum(page);
-            retPage.setPageSize(pageSize);
-            retPage.setTotal(pageSize);
+//            PageInfo<VoObject> retPage=new PageInfo<>(list);
+//            retPage.setPages(page);
+//            retPage.setPageNum(page);
+//            retPage.setPageSize(pageSize);
+//            retPage.setTotal(pageSize);
 //            System.out.println("\n..........nn...........\n"+retPage.toString());
-            return new ReturnObject(retPage);
+            return new ReturnObject(commonUtil.listToPage(list,page,pageSize));
         });
 
 

@@ -83,8 +83,8 @@ public class Sku implements VoObject {
     }
 
     @Override
-    public SkuVo createVo() {
-        return new SkuVo(this);
+    public Object createVo() {
+        return this;
     }
 
     @Override
