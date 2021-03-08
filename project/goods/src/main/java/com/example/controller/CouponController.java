@@ -69,7 +69,7 @@ public class CouponController {
      * @return
      */
     @GetMapping("/couponactivities/{id}/skus")
-    public Mono<Object> getCouponSu(@PathVariable Long id){
+    public Mono<Object> getCouponSpu(@PathVariable Long id){
         return couponService.getCouponSpu(id).map(Common::getRetObject);
     }
 
