@@ -62,10 +62,15 @@ public class CouponController {
         return couponService.showOwnInvalidcouponactivities(id,page,pageSize).map(Common::getPageRetObject);
     }
 
+    /**
+     *
+     * @param id 活动id
+
+     * @return
+     */
     @GetMapping("/couponactivities/{id}/skus")
-    public Mono<Object> getCouponSku(@PathVariable Long id,@RequestParam(required = false,defaultValue = "1") Integer page,
-                                     @RequestParam(required = false,defaultValue = "1") Integer pageSize){
-        return couponService.getCouponSku(id,page,pageSize).map(Common::getPageRetObject);
+    public Mono<Object> getCouponSu(@PathVariable Long id){
+        return couponService.getCouponSpu(id).map(Common::getRetObject);
     }
 
     @GetMapping("/shops/{shopId}/couponactivities/{id}")
@@ -92,17 +97,32 @@ public class CouponController {
         return couponService.deleteActivity(id).map(returnObject -> ResponseUtil.ok());
     }
 
+    /**
+     *
+     * @param userId
+     * @param shopId
+     * @param id    活动id
+     * @param spuId
+     * @return
+     */
     @PostMapping("/shops/{shopId}/couponactivities/{id}/skus")
     public Mono<Object> addRangeOfActivity(@LoginUser Long userId, @PathVariable Long shopId,
-                                           @PathVariable Long id, @RequestBody List<Long> skus){
-        return couponService.addRangeOfActivity(shopId,id,skus)
-                .map(returnObject -> ResponseUtil.ok());
+                                           @PathVariable Long id, @RequestParam Long spuId){
+        return couponService.addRangeOfActivity(shopId,id,spuId)
+                .map(returnObject -> Common.getRetObject(returnObject));
     }
 
+    /**
+     *
+     * @param userId
+     * @param shopId
+     * @param id   couponSpuId
+     * @return
+     */
     @DeleteMapping("/shops/{shopId}/couponskus/{id}")
     public Mono<Object> deleteActivityRange(@LoginUser Long userId,@PathVariable Long shopId,
                                             @PathVariable Long id){
-        return couponService.deleteActivityRange(id).map(Common::getRetObject);
+        return couponService.deleteActivityRange(id).map(returnObject -> ResponseUtil.ok());
     }
 
     @GetMapping("/coupons")

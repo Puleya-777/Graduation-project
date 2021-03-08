@@ -32,6 +32,8 @@ public class CouponService {
     SkuRepository skuRepository;
     @Resource
     ShopRepository shopRepository;
+    @Resource
+    CouponSpuRepository couponSpuRepository;
     @Autowired
     NacosHelp nacosHelp;
     @Autowired
@@ -78,11 +80,12 @@ public class CouponService {
                 .map(ReturnObject::new);
     }
 
-    public Mono<ReturnObject> getCouponSku(Long id, Integer page, Integer pageSize) {
-        return couponSkuRepository.findAllByActivityId(id).flatMap(couponSkuPo -> {
-            return skuRepository.findById(couponSkuPo.getSkuId()).defaultIfEmpty(new SkuPo());
-        }).map(Sku::new).collect(Collectors.toList())
-                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
+    public Mono<ReturnObject> getCouponSpu(Long id) {
+//        return couponSpuRepository.findAllByActivityId(id).flatMap(couponSkuPo -> {
+//            return skuRepository.findById(couponSkuPo.getSkuId()).defaultIfEmpty(new SkuPo());
+//        }).map(Sku::new).collect(Collectors.toList())
+//                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
+        return couponSpuRepository.findByActivityId(id).map(CouponSpu::new).map(ReturnObject::new);
     }
 
 
@@ -110,22 +113,24 @@ public class CouponService {
         return couponActivityRepository.deleteCouponActivityPoById(id).map(ReturnObject::new);
     }
 
-    public Mono<ReturnObject> addRangeOfActivity(Long shopId, Long activityId, List<Long> skus) {
-        return couponSkuRepository.saveAll(skus.stream().map(skuId->{
-            CouponSkuPo couponSkuPo=new CouponSkuPo();
-            couponSkuPo.setSkuId(skuId);
-            couponSkuPo.setActivityId(activityId);
-            return couponSkuPo;
-        }).collect(Collectors.toList()))
-                .collect(Collectors.toList()).map(ReturnObject::new);
+    public Mono<ReturnObject> addRangeOfActivity(Long shopId, Long activityId, Long spuId) {
+//        return couponSkuRepository.saveAll(skus.stream().map(skuId->{
+//            CouponSkuPo couponSkuPo=new CouponSkuPo();
+//            couponSkuPo.setSkuId(skuId);
+//            couponSkuPo.setActivityId(activityId);
+//            return couponSkuPo;
+//        }).collect(Collectors.toList()))
+//                .collect(Collectors.toList()).map(ReturnObject::new);
+        CouponSpuPo couponSpuPo=new CouponSpuPo();
+        couponSpuPo.setActivityId(activityId);
+        couponSpuPo.setSpuId(spuId);
+        return  couponSpuRepository.save(couponSpuPo).map(CouponSpu::new).map(ReturnObject::new);
+
 
     }
 
     public Mono<ReturnObject> deleteActivityRange(Long spuId) {
-        return skuRepository.findAllByGoodsSpuId(spuId).map(skuPo -> {
-            couponSkuRepository.deleteById(skuPo.getId());
-            return skuPo;
-        }).collect(Collectors.toList()).map(ReturnObject::new);
+        return couponSpuRepository.deleteById(spuId).map(ReturnObject::new);
 
     }
 
