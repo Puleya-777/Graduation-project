@@ -69,8 +69,10 @@ public class CouponController {
      * @return
      */
     @GetMapping("/couponactivities/{id}/skus")
-    public Mono<Object> getCouponSpu(@PathVariable Long id){
-        return couponService.getCouponSpu(id).map(Common::getRetObject);
+    public Mono<Object> getCouponSpu(@PathVariable Long id,
+                                     @RequestParam(required = false,defaultValue = "1") Integer page,
+                                     @RequestParam(required = false,defaultValue = "1") Integer pageSize){
+        return couponService.getCouponSpu(id,page,pageSize).map(Common::getPageRetObject);
     }
 
     @GetMapping("/shops/{shopId}/couponactivities/{id}")

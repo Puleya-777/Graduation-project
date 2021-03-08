@@ -80,18 +80,14 @@ public class CouponService {
                 .map(ReturnObject::new);
     }
 
-    public Mono<ReturnObject> getCouponSpu(Long id) {
+    public Mono<ReturnObject> getCouponSpu(Long id,Integer page,Integer pageSize) {
 //        return couponSpuRepository.findAllByActivityId(id).flatMap(couponSkuPo -> {
 //            return skuRepository.findById(couponSkuPo.getSkuId()).defaultIfEmpty(new SkuPo());
 //        }).map(Sku::new).collect(Collectors.toList())
 //                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
-        return couponSpuRepository.findByActivityId(id).defaultIfEmpty(new CouponSpuPo()).map(couponSpuPo -> {
-            if(couponSpuPo.getId()!=null){
-                return new ReturnObject<>(new CouponSpu(couponSpuPo));
-            }else{
-                return new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST);
-            }
-        });
+        return couponSpuRepository.findAllByActivityId(id).map(CouponSpu::new)
+                .collect(Collectors.toList()).map(list->commonUtil.listToPage(list,page,pageSize))
+                .map(ReturnObject::new);
     }
 
 
