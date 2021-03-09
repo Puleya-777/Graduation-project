@@ -1,5 +1,6 @@
 package com.example.service;
 
+import com.example.dao.GoodsDao;
 import com.example.model.bo.*;
 import com.example.model.po.*;
 import com.example.model.vo.CouponActivityVo;
@@ -29,7 +30,7 @@ public class CouponService {
     @Resource
     CouponSkuRepository couponSkuRepository;
     @Resource
-    SkuRepository skuRepository;
+    SpuRepository spuRepository;
     @Resource
     ShopRepository shopRepository;
     @Resource
@@ -40,6 +41,8 @@ public class CouponService {
     CommonUtil commonUtil;
     @Autowired
     OssFileUtil ossFileUtil;
+    @Autowired
+    GoodsDao goodsDao;
 
 
     public Mono<ReturnObject> addCouponActivity(Long userId, Long shopId, CouponActivityVo couponActivityVo) {
@@ -85,8 +88,10 @@ public class CouponService {
 //            return skuRepository.findById(couponSkuPo.getSkuId()).defaultIfEmpty(new SkuPo());
 //        }).map(Sku::new).collect(Collectors.toList())
 //                .map(list->commonUtil.listToPage(list,page,pageSize)).map(ReturnObject::new);
-        return couponSpuRepository.findAllByActivityId(id).map(CouponSpu::new)
-                .collect(Collectors.toList()).map(list->commonUtil.listToPage(list,page,pageSize))
+        return couponSpuRepository.findAllByActivityId(id)
+                .flatMap(couponSpuPo -> goodsDao.getSpuInfoById(couponSpuPo.getSpuId()))
+                .collect(Collectors.toList())
+                .map(list->commonUtil.listToPage(list,page,pageSize))
                 .map(ReturnObject::new);
     }
 
