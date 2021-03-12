@@ -1,7 +1,8 @@
 package demo.address.controller;
 
 
-import demo.address.repository.FootPrintRepository;
+
+import demo.footprint.repository.FootprintRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +15,7 @@ import reactor.core.publisher.Mono;
 public class OkController {
 
     @Autowired
-    FootPrintRepository footPrintRepository;
+    FootprintRepository footPrintRepository;
 
     @RequestMapping("ok")
     public Mono<String> ok(){
