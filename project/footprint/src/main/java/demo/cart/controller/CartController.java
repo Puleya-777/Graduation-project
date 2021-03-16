@@ -1,5 +1,7 @@
 package demo.cart.controller;
 
+import com.example.annotation.Audit;
+import com.example.annotation.LoginUser;
 import demo.cart.model.vo.NewCartVo;
 import demo.cart.service.CartService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,43 +20,34 @@ public class CartController {
     CartService cartService;
 
     @GetMapping("carts")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono getCarts(@RequestParam(defaultValue = "1") Integer page,
+    @Audit
+    public Mono getCarts(@LoginUser Long userId,
+                         @RequestParam(defaultValue = "1") Integer page,
                          @RequestParam(defaultValue = "10") Integer pageSize){
-        return cartService.getCarts(101L,page,pageSize);
+        return cartService.getCarts(userId,page,pageSize);
     }
 
     @PostMapping("carts")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono newCart(@RequestBody NewCartVo newCartVo){
-        return cartService.newCarts(101L,newCartVo);
+    @Audit
+    public Mono newCart(@LoginUser Long userId,@RequestBody NewCartVo newCartVo){
+        return cartService.newCarts(userId,newCartVo);
     }
 
     @DeleteMapping("carts")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono deleteAllCart(){
-        return cartService.deleteAll(101L);
+    @Audit
+    public Mono deleteAllCart(@LoginUser Long userId){
+        return cartService.deleteAll(userId);
     }
 
     @PutMapping("carts/{id}")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono modifiedCart(@PathVariable Long id,@RequestBody NewCartVo vo){
-        return cartService.modifiedCart(101L,id,vo);
+    @Audit
+    public Mono modifiedCart(@LoginUser Long userId,@PathVariable Long id,@RequestBody NewCartVo vo){
+        return cartService.modifiedCart(userId,id,vo);
     }
 
     @DeleteMapping("carts/{id}")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono deleteCart(@PathVariable Long id){
-        return cartService.deleteCart(101L,id);
+    @Audit
+    public Mono deleteCart(@LoginUser Long userId,@PathVariable Long id){
+        return cartService.deleteCart(userId,id);
     }
 }

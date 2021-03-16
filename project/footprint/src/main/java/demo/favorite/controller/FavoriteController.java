@@ -1,5 +1,7 @@
 package demo.favorite.controller;
 
+import com.example.annotation.Audit;
+import com.example.annotation.LoginUser;
 import demo.favorite.service.FavoriteService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,27 +20,21 @@ public class FavoriteController {
     FavoriteService favoriteService;
 
     @GetMapping("/favorites")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono getFavorite( @RequestParam(defaultValue = "1") Integer page,
-                             @RequestParam(defaultValue = "10") Integer pageSize){
-        return favoriteService.getFavorite(101L,page,pageSize);
+    @Audit
+    public Mono getFavorite(@LoginUser Long userId, @RequestParam(defaultValue = "1") Integer page,
+                            @RequestParam(defaultValue = "10") Integer pageSize){
+        return favoriteService.getFavorite(userId,page,pageSize);
     }
 
     @PostMapping("/favorites/goods/{skuId}")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono newFavorite(@PathVariable Long skuId){
-        return favoriteService.newFavorite(101L,skuId);
+    @Audit
+    public Mono newFavorite(@LoginUser Long userId,@PathVariable Long skuId){
+        return favoriteService.newFavorite(userId,skuId);
     }
 
     @DeleteMapping("/favorites/{id}")
-    /**
-     * TODO 解析Token获取customerId
-     */
-    public Mono deleteFavorite(@PathVariable Long id){
-        return favoriteService.deleteFavorite(101L,id);
+    @Audit
+    public Mono deleteFavorite(@LoginUser Long userId,@PathVariable Long id){
+        return favoriteService.deleteFavorite(userId,id);
     }
 }

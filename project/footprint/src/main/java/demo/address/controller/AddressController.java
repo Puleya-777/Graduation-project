@@ -1,5 +1,7 @@
 package demo.address.controller;
 
+import com.example.annotation.Audit;
+import com.example.annotation.LoginUser;
 import com.example.util.Common;
 import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
@@ -74,54 +76,48 @@ public class AddressController {
 
 
     /**
-     * TODO 解析token获取customId；
      * 买家查询所有已有的地址信息
      */
     @GetMapping("addresses")
-    //@Audit
-    public Mono getAddress(@RequestParam(defaultValue = "1") Integer page, @RequestParam(defaultValue = "10") Integer pageSize){
+    @Audit
+    public Mono getAddress(@LoginUser Long userId, @RequestParam(defaultValue = "1") Integer page, @RequestParam(defaultValue = "10") Integer pageSize){
         page = (page == null)?1:page;
         pageSize = (pageSize == null)?10:pageSize;
-        return addressService.getAddress(101L,page,pageSize);
+        return addressService.getAddress(userId,page,pageSize);
     }
 
     /**
-     * TODO 解析token获取customId；
      * 买家新增地址
      */
     @PostMapping("addresses")
-    //@Audit
-    public Mono newAddress(@RequestBody NewAddressVo newAddressPo){
-        return addressService.newAddress(101L,newAddressPo);
+    @Audit
+    public Mono newAddress(@LoginUser Long userId,@RequestBody NewAddressVo newAddressPo){
+        return addressService.newAddress(userId,newAddressPo);
     }
 
     /**
-     * TODO 解析token获取customId；
      * 买家设置默认地址
      */
     @PutMapping("addresses/{id}/default")
-    //@Audit
-    public Mono defaultAddress(@PathVariable Long id){
-        return addressService.setAddressDefault(101L,id);
+    public Mono defaultAddress(@LoginUser Long userId,@PathVariable Long id){
+        return addressService.setAddressDefault(userId,id);
     }
 
     /**
-     * TODO 解析token获取customId；
      * 买家修改自己的地址信息
      */
     @PutMapping("addresses/{id}")
-    //@Audit
-    public Mono modifiedAddress(@PathVariable Long id,@RequestBody NewAddressVo newAddressVo){
-        return addressService.modifiedAddress(101L,id,newAddressVo);
+    @Audit
+    public Mono modifiedAddress(@LoginUser Long userId,@PathVariable Long id,@RequestBody NewAddressVo newAddressVo){
+        return addressService.modifiedAddress(userId,id,newAddressVo);
     }
 
     /**
-     * TODO 解析token获取customId；
      * 买家删除地址
      */
     @DeleteMapping("addresses/{id}")
-    public Mono deleteAddress(@PathVariable Long id){
-        return addressService.deleteAddress(101L,id);
+    public Mono deleteAddress(@LoginUser Long userId,@PathVariable Long id){
+        return addressService.deleteAddress(userId,id);
     }
 
     /**

@@ -49,3 +49,5 @@ userService:
     multiply: false
     #jwt过期的时间(秒)
     jwtExpire: 3600
+
+    #git config --global http.sslVerify "false"
