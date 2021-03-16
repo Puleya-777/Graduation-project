@@ -10,18 +10,17 @@ spring:
     password: 123456
 
 
-#  自动触发测试
-#  redis:
-#    database: 0
-#    timeout: 0
-#    host: 127.0.0.1
-#    port: 6379
-#    password:
-#    pool:
-#      max-active: 8
-#      max-wait: -1
-#      max-idle: 8
-#      min-idle: 0
+  redis:
+    database: 0
+    timeout: 0
+    host: 127.0.0.1
+    port: 6379
+    password:
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 8
+      min-idle: 0
 
 aliyun:
   accessKeyId: LTAI4G1QW56GoeAu9YMTNPPf
@@ -32,3 +31,21 @@ aliyun:
     urlPrefix: ad77.oss-cn-beijing.aliyuncs.com
 server:
   port: 8082
+
+
+userService:
+  #是否对数据库中的未初始化的数据初始化
+  initialization: true
+  #分布式锁失效时间（秒）
+  lockerExpireTime: 30
+  user:
+    # user的权限字在Redis中失效秒数
+    expiretime: 600
+  role:
+    # role的权限字在Redis中失效秒数
+    expiretime: 600
+  login:
+    #是否允许重复登录
+    multiply: false
+    #jwt过期的时间(秒)
+    jwtExpire: 3600
