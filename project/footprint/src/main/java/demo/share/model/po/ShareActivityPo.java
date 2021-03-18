@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 /**
  * @author chei1
@@ -34,4 +35,14 @@ public class ShareActivityPo {
     private LocalDateTime gmtModified;
 
     private Integer state;
+
+    private Integer quantity;
+
+    public static HashMap<Integer,String> stateMap =new HashMap<Integer,String>();
+
+    static {
+        stateMap.put(1, "待发布");
+        stateMap.put(2, "已发布");
+        stateMap.put(3, "已下线");
+    }
 }

@@ -19,7 +19,7 @@ public class SharePo {
     @Id
     private Long id;
 
-    private Long shareId;
+    private Long sharerId;
 
     private Long goodsSkuId;
 
@@ -30,4 +30,6 @@ public class SharePo {
     private LocalDateTime gmtModified;
 
     private Long shareActivityId;
+
+    private String shareUrl;
 }

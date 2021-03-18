@@ -31,7 +31,7 @@ public class BeSharePo {
     
     private Integer rebate;
     
-    private LocalDateTime gmtCreat;
+    private LocalDateTime gmtCreate;
     
     private LocalDateTime gmtModified;
     
