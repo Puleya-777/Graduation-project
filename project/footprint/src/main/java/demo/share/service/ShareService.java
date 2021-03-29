@@ -142,15 +142,15 @@ public class ShareService {
 
     public Mono shareGoods(Long userId,Long skuId){
         return shareActivityRepository.findByGoodsSkuId(skuId).flatMap(activityPo->{
-            if(activityPo.getState()!=1){
-                return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动不存在"));
-            }
-            if(activityPo.getBeginTime().isAfter(LocalDateTime.now())){
-                return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动还未开始"));
-            }
-            if(activityPo.getEndTime().isBefore(LocalDateTime.now())){
-                return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动已经结束"));
-            }
+//            if(activityPo.getState()!=1){
+//                return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动不存在"));
+//            }
+//            if(activityPo.getBeginTime().isAfter(LocalDateTime.now())){
+//                return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动还未开始"));
+//            }
+//            if(activityPo.getEndTime().isBefore(LocalDateTime.now())){
+//                return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动已经结束"));
+//            }
             SharePo po=new SharePo();
             po.setSharerId(userId);
             po.setGoodsSkuId(skuId);
@@ -189,15 +189,15 @@ public class ShareService {
                 return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"无法购买自己分享的商品"));
             }
             return shareActivityRepository.findById(sharePo.getShareActivityId()).flatMap(activityPo -> {
-                if(activityPo.getState()!=1){
-                    return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动不存在"));
-                }
-                if(activityPo.getBeginTime().isAfter(LocalDateTime.now())){
-                    return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动还未开始"));
-                }
-                if(activityPo.getEndTime().isBefore(LocalDateTime.now())){
-                    return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动已经结束"));
-                }
+//                if(activityPo.getState()!=1){
+//                    return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动不存在"));
+//                }
+//                if(activityPo.getBeginTime().isAfter(LocalDateTime.now())){
+//                    return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动还未开始"));
+//                }
+//                if(activityPo.getEndTime().isBefore(LocalDateTime.now())){
+//                    return Mono.just(new ReturnObject<>(ResponseCode.SHAREACT_CONFLICT,"分享活动已经结束"));
+//                }
                 BeSharePo beSharePo=new BeSharePo();
                 beSharePo.setCustomerId(userId);
                 beSharePo.setGmtCreate(LocalDateTime.now());
