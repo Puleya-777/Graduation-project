@@ -8,6 +8,7 @@ import demo.advertise.model.po.AdvertisePo;
 import demo.user.model.po.UserPo;
 import demo.user.model.vo.*;
 import demo.user.repository.UserRepository;
+import demo.util.EmailUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -77,12 +78,12 @@ public class UserService {
         }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
     }
     public Mono ResetPwd(ResetPasswordVo vo){
-        return userRepository.findByUserName(vo.getUserName()).flatMap(po->{
+        return userRepository.findByUserName(vo.getUserName()).map(po->{
             if(po.getState()!=1){
-                return Mono.just(new ReturnObject<>(ResponseCode.AUTH_USER_FORBIDDEN));
+                return new ReturnObject<>(ResponseCode.AUTH_USER_FORBIDDEN);
             }
             if(!po.getEmail().equals(vo.getEmail())){
-                return Mono.just(new ReturnObject<>(ResponseCode.EMAIL_WRONG));
+                return new ReturnObject<>(ResponseCode.EMAIL_WRONG);
             }
             //随机生成验证码
             String captcha = RandomCaptcha.getRandomString(6);
@@ -95,8 +96,13 @@ public class UserService {
             redisTemplate.opsForValue().set(key,id);
             //五分钟后过期
             redisTemplate.expire("cp_" + captcha, 5*60*1000, TimeUnit.MILLISECONDS);
-            return Mono.just(new ReturnObject<>(captcha));
-        }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST));
+            boolean flag= EmailUtil.sendEmail(vo.getEmail(),captcha);
+            if(flag){
+                return new ReturnObject<>();
+            }else {
+                return new ReturnObject<>(ResponseCode.EMAIL_WRONG);
+            }
+        }).defaultIfEmpty(new ReturnObject<>(ResponseCode.RESOURCE_ID_NOTEXIST,"无效邮箱"));
     }
     public Mono modifiedPwd(ModifiedPwdVo vo){
         return Mono.just(redisTemplate.hasKey("cp_" + vo.getCaptcha())).flatMap(flag -> {
