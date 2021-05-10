@@ -4,9 +4,6 @@ import com.example.model.VoObject;
 import com.example.model.po.CouponSpuPo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor

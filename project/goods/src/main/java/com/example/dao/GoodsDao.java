@@ -1,6 +1,5 @@
 package com.example.dao;
 
-import com.example.model.VoObject;
 import com.example.model.bo.*;
 import com.example.model.po.*;
 import com.example.model.vo.SimpleRetSku;
@@ -10,13 +9,10 @@ import com.example.util.ResponseCode;
 import com.example.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -66,12 +62,6 @@ public class GoodsDao {
                 return Mono.just(new ShopPo());
             }
         }).map(Shop::new);
-//        System.out.println(id);
-//        System.out.println(skuPoMono.block());
-//        System.out.println(spuPoMono.block());
-//        System.out.println(brandMono.block());
-//        System.out.println(categoryMono.block());
-//        System.out.println(shopMono.block());
 
         return Mono.zip(skuPoMono,spuPoMono,brandMono,categoryMono,shopMono).map(tuple->{
             System.out.println("has enter");

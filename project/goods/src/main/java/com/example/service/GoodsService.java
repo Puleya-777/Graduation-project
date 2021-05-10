@@ -5,24 +5,19 @@ import com.example.dao.GoodsDao;
 import com.example.model.VoObject;
 import com.example.model.bo.*;
 import com.example.model.po.*;
-import com.example.model.vo.SimpleRetSku;
 import com.example.model.vo.SkuVo;
 import com.example.model.vo.SpuVo;
 import com.example.repository.*;
 import com.example.util.*;
 import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -116,13 +111,12 @@ public class GoodsService {
     }
 
     public Mono<ReturnObject> modifyGoodsState(Long id,Integer state) {
-        return skuRepository.findById(id).defaultIfEmpty(new SkuPo()).map(spuPo -> {
-            if(spuPo.getId()==null){
-                return ResponseCode.RESOURCE_ID_NOTEXIST;
+        return skuRepository.findById(id).defaultIfEmpty(new SkuPo()).flatMap(skuPo -> {
+            if(skuPo.getId()==null){
+                return Mono.just(ResponseCode.RESOURCE_ID_NOTEXIST);
             }else{
-                spuPo.setState(state);
-                skuRepository.save(spuPo);
-                return spuPo;
+                skuPo.setState(state);
+                return skuRepository.save(skuPo);
             }
         }).map(ReturnObject::new);
     }
@@ -155,22 +149,11 @@ public class GoodsService {
 
     public Mono<ReturnObject> querySku(String skuSn, Long spuId, Integer page, Integer pageSize) {
         PageHelper.startPage(page, pageSize);
-//        Mono<List<VoObject>> skuPos=skuRepository.findAllByGoodsSpuId(spuId).filter(skuPo -> skuPo.getSkuSn().equals(skuSn))
-//                .map(Sku::new).collect(Collectors.toList());
         Mono<List<VoObject>> skuPos=skuRepository.findAll()
                 .map(Sku::new).collect(Collectors.toList());
         return skuPos.map(list->{
-//            PageInfo<VoObject> pageInfo = PageInfo.of(list);
-//            PageInfo<VoObject> retPage=new PageInfo<>(list);
-//            retPage.setPages(page);
-//            retPage.setPageNum(page);
-//            retPage.setPageSize(pageSize);
-//            retPage.setTotal(pageSize);
-//            System.out.println("\n..........nn...........\n"+retPage.toString());
             return new ReturnObject(commonUtil.listToPage(list,page,pageSize));
         });
-
-
     }
 
     public Mono<ReturnObject> modifySpu(Long id, SpuVo spuVo) {

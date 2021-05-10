@@ -2,12 +2,9 @@ package com.example.model.bo;
 
 import com.example.model.VoObject;
 import com.example.model.po.CommentPo;
-import com.example.util.Common;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 public class Comment implements VoObject {

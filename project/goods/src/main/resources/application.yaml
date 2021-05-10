@@ -2,10 +2,7 @@
 
 spring:
   r2dbc:
-    #    url: r2dbcs:mysql://139.9.160.14:3306/test
-    #    username: Flux
-    #    password: root
-    password: 123456
+    password:
     url: r2dbcs:mysql://localhost:3306/webflux?serverTimezone=UTC
     username: root
 
@@ -38,12 +35,6 @@ privilegeservice:
     #jwt过期的时间(秒)
     jwtExpire: 3600
 
-aliyun:
-  accessKeyId: LTAI4G1QW56GoeAu9YMTNPPf
-  accessKeySecret: UrUuPuzVwYuzxnQLldMHimzZjRBpVD
-  oss:
-    endpoint: oss-cn-beijing.aliyuncs.com
-    bucketName: ad77
-    urlPrefix: ad77.oss-cn-beijing.aliyuncs.com
+
 server:
   port: 8081
