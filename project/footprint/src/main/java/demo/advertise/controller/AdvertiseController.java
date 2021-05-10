@@ -1,5 +1,6 @@
 package demo.advertise.controller;
 
+import com.example.annotation.Audit;
 import com.example.util.ReturnObject;
 import demo.advertise.model.po.AdvertisePo;
 import demo.util.OssFileUtil;
@@ -54,30 +55,27 @@ public class AdvertiseController {
 
     /**
      * 管理员设置默认广告
-     * TODO 解析判断是否有管理员权限
      */
     @PutMapping("/shops/{did}/advertisement/{id}/default")
-    //@Audit
+    @Audit
     public Mono setAdDefault(@PathVariable Long did,@PathVariable Long id){
         return advertiseService.setAdDefault(id);
     }
 
     /**
      * 管理员修改广告内容
-     * TODO 解析判断是否有管理员权限
      */
     @PutMapping("/shops/{did}/advertisement/{id}")
-    //@Audit
+    @Audit
     public Mono modifiedAd(@PathVariable Long did, @PathVariable Long id, @RequestBody ModifiedAdVo vo){
         return advertiseService.modifiedAd(id,vo);
     }
 
     /**
      * 管理员删除广告
-     * TODO 解析判断是否有管理员权限
      */
     @DeleteMapping("/shops/{did}/advertisement/{id}")
-    //@Audit
+    @Audit
     public Mono deleteAd(@PathVariable Long did, @PathVariable Long id){
         return advertiseService.deleteAd(id);
     }
@@ -131,17 +129,17 @@ public class AdvertiseController {
 
     /**
      * 管理员上架广告
-     * TODO 验证是否为管理员
      */
     @PutMapping("/shops/{did}/advertisement/{id}/onshelves")
+    @Audit
     public Mono onShelves(@PathVariable Long did, @PathVariable Long id){
         return advertiseService.onShelves(id);
     }
 
     /**
      * 管理员下架广告
-     * TODO 验证是否为管理员
      */
+    @Audit
     @PutMapping("/shops/{did}/advertisement/{id}/offshelves")
     public Mono offShelves(@PathVariable Long did, @PathVariable Long id){
         return advertiseService.offShelves(id);
@@ -149,16 +147,16 @@ public class AdvertiseController {
 
     /**
      * 管理员审核广告
-     * TODO 验证是否为管理员
      */
+    @Audit
     @PutMapping("/shops/{did}/advertisement/{id}/audit")
     public Mono auditAd(@PathVariable Long did, @PathVariable Long id){
         return advertiseService.auditAd(id);
     }
     /**
      * 管理员查看某一时间段的广告
-     * TODO 验证是否为管理员
      */
+    @Audit
     @GetMapping("/shops/{did}/timesegments/{id}/advertisement")
     public Mono getAdByTime(@PathVariable Long did, @PathVariable Long id,@RequestParam(defaultValue = "1") Integer page,@RequestParam(defaultValue = "10") Integer pageSize){
         return advertiseService.getAdByTime(id,page,pageSize);

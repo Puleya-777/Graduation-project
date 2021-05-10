@@ -1,5 +1,6 @@
 package demo.cart.model.po;
 
+import demo.cart.model.vo.NewCartVo;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -30,5 +31,13 @@ public class CartPo {
     private LocalDateTime gmtCreate;
 
     private LocalDateTime gmtModified;
+
+    public void trans(Long customerId,NewCartVo vo){
+        this.customerId=customerId;
+        this.goodsSkuId=vo.getGoodsSkuId();
+        this.quantity=vo.getQuantity();
+        this.gmtCreate=LocalDateTime.now();
+        this.gmtModified=LocalDateTime.now();
+    }
 
 }
