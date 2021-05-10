@@ -1,0 +1,20 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+
+  application:
+    name: order
+  r2dbc:
+    #    url: r2dbcs:mysql://139.9.160.14:3306/test
+    #    username: Flux
+    #    password: root
+    password: root
+    url: r2dbcs:mysql://101.200.49.56:3306/webflux?serverTimezone=UTC
+    username: root
+
+
+server:
+  port: 8083
+
