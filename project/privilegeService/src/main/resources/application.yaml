@@ -1,9 +1,7 @@
 spring:
   r2dbc:
-    #    url: r2dbcs:mysql://139.9.160.14:3306/test
-    #    username: Flux
-    #    password: root
-    password: 123456
+
+    password:
     url: r2dbcs:mysql://localhost:3306/webflux?serverTimezone=UTC
     username: root
 

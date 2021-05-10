@@ -30,8 +30,6 @@ public class SkuPo {
 
     String imageUrl;
 
-    Integer state;
-
     Long inventory;
 
     String detail;
@@ -41,6 +39,8 @@ public class SkuPo {
     LocalDateTime gmtCreate;
 
     LocalDateTime gmtModified;
+
+    Integer state;
 
     public SkuPo(SkuVo skuVo){
         skuSn=skuVo.getSn();
@@ -65,11 +65,9 @@ public class SkuPo {
         configuration=skuVo.getConfiguration();
         weight=skuVo.getWeight();
         imageUrl=skuVo.getImageUrl();
-
         state=0;
         inventory=skuVo.getInventory();
         detail=skuVo.getDetail();
-
         disabled=true;
     }
 

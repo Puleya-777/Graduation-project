@@ -42,7 +42,7 @@ public class CouponController {
         return couponService.addCouponActivity(userId,shopId, couponActivityVo).map(Common::getRetObject);
     }
 
-    @PostMapping("/shops/{shopId}/couponactivities/{id}")
+    @PostMapping("/shops/{shopId}/couponactivities/{id}/uploadImg")
     public Mono<Object> upCouponActivityPicture(@LoginUser Long userId, @PathVariable Long shopId,
                                                 @PathVariable Long id, @RequestParam("file") MultipartFile img){
         return couponService.upCouponActivityPicture(id,img);
@@ -141,7 +141,7 @@ public class CouponController {
     @PutMapping("/shops/{shopId}/couponactivities/{id}/onshelves")
     public Mono<Object> onShelvesCouponActivity(@LoginUser Long userId,@PathVariable Long shopId,
                                                 @PathVariable Long id){
-        return couponService.changeStateOfCouponActivity(id,1).map(returnObject -> ResponseUtil.ok());
+        return couponService.changeStateOfCouponActivity(id,0).map(returnObject -> ResponseUtil.ok());
     }
 
     @PutMapping("/shops/{shopId}/couponactivities/{id}/offshelves")

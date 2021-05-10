@@ -2,7 +2,6 @@ package com.example.model.bo;
 
 import com.example.model.VoObject;
 import com.example.model.po.GrouponActivityPo;
-import io.netty.util.internal.StringUtil;
 import lombok.Data;
 
 import java.time.LocalDateTime;

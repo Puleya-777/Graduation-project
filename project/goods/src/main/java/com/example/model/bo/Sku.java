@@ -2,7 +2,6 @@ package com.example.model.bo;
 
 import com.example.model.VoObject;
 import com.example.model.po.SkuPo;
-import com.example.model.vo.SkuVo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -4,8 +4,6 @@ import com.example.model.VoObject;
 import com.example.model.po.CouponPo;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 public class Coupon implements VoObject {
 

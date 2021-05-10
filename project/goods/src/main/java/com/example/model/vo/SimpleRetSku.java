@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class SimpleRetSku implements VoObject{
+public class SimpleRetSku implements VoObject {
 
     Long id;
 

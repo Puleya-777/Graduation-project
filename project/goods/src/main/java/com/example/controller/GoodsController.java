@@ -308,9 +308,11 @@ public class GoodsController {
      */
     @PutMapping("/shops/{shopId}/skus/{id}/offshelves")
     public Mono<Object> goodsOffShelves(@LoginUser Long userId,@PathVariable Integer shopId,@PathVariable Long id){
+//    public Mono<Object> goodsOffShelves(@PathVariable Integer shopId,@PathVariable Long id){
+
         return goodsService.modifyGoodsState(id,1).map(returnObject -> {
             if(returnObject.getCode()==ResponseCode.OK){
-                return ResponseUtil.ok();
+                return ResponseUtil.ok(returnObject.getData());
             }else {
                 return ResponseUtil.fail(returnObject.getCode());
             }

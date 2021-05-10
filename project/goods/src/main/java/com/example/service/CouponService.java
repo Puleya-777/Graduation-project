@@ -152,7 +152,6 @@ public class CouponService {
                 }).collect(Collectors.toList())
                 .map(list->commonUtil.listToPage(list,page,pageSize))
                 .map(ReturnObject::new);
-
     }
 
     public Mono<ReturnObject> changeStateOfCouponActivity(Long id, int state) {

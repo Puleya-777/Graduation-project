@@ -1,13 +1,10 @@
 spring:
   r2dbc:
-#    username: puleya
-#    password: 98077777Cm
-#    url: r2dbcs:mysql://139.9.160.14:3306/other?serverTimezone=UTC
-#    url: r2dbcs:mysql://rm-bp1wsixrgt4h3yfm1so.mysql.rds.aliyuncs.com:3306/other?serverTimezone=UTC
+
     url: r2dbcs:mysql://localhost:3306/other?serverTimezone=UTC
 #    username: other
     username: root
-    password: 123456
+    password:
 
 
 #  自动触发测试
@@ -23,12 +20,6 @@ spring:
 #      max-idle: 8
 #      min-idle: 0
 
-aliyun:
-  accessKeyId: LTAI4G1QW56GoeAu9YMTNPPf
-  accessKeySecret: UrUuPuzVwYuzxnQLldMHimzZjRBpVD
-  oss:
-    endpoint: oss-cn-beijing.aliyuncs.com
-    bucketName: ad77
-    urlPrefix: ad77.oss-cn-beijing.aliyuncs.com
+
 server:
   port: 8082
