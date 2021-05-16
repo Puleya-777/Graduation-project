@@ -265,7 +265,7 @@ public class OrderService {
     /**
      * 查询订单 OrderId
      */
-    public Mono<ReturnObject<OrderCreateRetOVo>> getOrdersByOrderId(Long id, Long retUserId) {
+    public Mono<ReturnObject<OrderCreateRetOVo>> getOrdersByOrderId(Long id) {
         return orderDao.findOrderById(id).flatMap(ordersRet->{
             if (!ordersRet.getCode().equals(ResponseCode.OK))
             {
@@ -279,11 +279,6 @@ public class OrderService {
                 List<OrderItems> orderItemsList = new ArrayList<OrderItems>();
                 orders.getSubstate();
                 Long userId=orders.getCustomerId();
-                if (!userId.equals(retUserId))
-                {
-                    logger.info("userId != retUserId");
-                    return Mono.just(new ReturnObject<>(ResponseCode.RESOURCE_ID_OUTSCOPE));
-                }
                 return Mono.zip(userFeign.getById(userId),goodsFeign.getById(orders.getShopId())).map(tuple->{
                     UserPo userPo = tuple.getT1();
                     ShopPo shopPo = tuple.getT2();

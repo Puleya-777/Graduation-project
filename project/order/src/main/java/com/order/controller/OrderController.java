@@ -88,10 +88,9 @@ public class OrderController {
      * 查询订单 OrderId
      */
     @GetMapping("/orders/{id}")
-    public Mono getOrdersByOrderId(@PathVariable("id") Long id,
-                                    @LoginUser Long userId){
+    public Mono getOrdersByOrderId(@PathVariable("id") Long id){
         System.out.println("userId: "+userId);
-        return orderService.getOrdersByOrderId(id,userId).map(returnObject->{
+        return orderService.getOrdersByOrderId(id).map(returnObject->{
             if (returnObject.getCode().equals(ResponseCode.OK)) {
                 return Common.decorateReturnObject(returnObject);
             } else {
